@@ -1,0 +1,31 @@
+
+@import "tailwindcss";
+
+@theme {
+  /* ألوان نظام منصة موضة */
+  --color-moda-purple: #6C52A3;
+  --color-moda-purpleHover: #563F85;
+  --color-moda-darkBg: #121214;
+  --color-moda-lightBg: #F9F9FB;
+  --color-moda-cardDark: #2C2B30;
+  --color-moda-grayText: #7E7E7E;
+  --color-moda-gold: #FFB100;
+
+  /* الخط الافتراضي للموقع */
+  --font-sans: 'Cairo', sans-serif;
+}
+
+/* أنميشن الدوران العكسي لدائرة التحميل */
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 1s linear infinite;
+}
