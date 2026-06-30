@@ -27,8 +27,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const logout = async () => {
         try {
             await api.post('/Auth/logout');
-        } catch (err) {
-            toast.error("خطأ أثناء تسجيل الخروج", err);
+        } catch (err:any) {
+            console.log(err)
+            toast.error("خطأ أثناء تسجيل الخروج");
         } finally {
             localStorage.removeItem('token');
             setUser(null);

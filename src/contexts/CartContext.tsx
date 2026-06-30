@@ -1,13 +1,14 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
-import { useAuth } from './AuthContext';
+import { AuthContext } from './AuthContext';
 
 const CartContext = createContext({});
 
-export const CartProvider = ({ children }:{children:React.ReactNode}) => {
+export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     const [cartItems, setCartItems] = useState([]);
-    const { isAuthenticated } = useAuth();
- 
+    const { isAuthenticated } = useContext(AuthContext);
+
+
     // جلب عناصر السلة من السيرفر عند دخول المستخدم
     const fetchCart = async () => {
         if (!isAuthenticated) return;
@@ -24,7 +25,7 @@ export const CartProvider = ({ children }:{children:React.ReactNode}) => {
     }, [isAuthenticated]);
 
     // إضافة منتج للسلة /api/Cart/AddToCart
-    const addToCart = async (productId:number, quantity = 1) => {
+    const addToCart = async (productId: number, quantity = 1) => {
         try {
             await api.post('/Cart/AddToCart', { productId, quantity });
             fetchCart(); // تحديث السلة بعد الإضافة
@@ -36,10 +37,10 @@ export const CartProvider = ({ children }:{children:React.ReactNode}) => {
     };
 
     // حذف منتج من السلة /api/Cart/DeleteCartItem
-    const removeFromCart = async (cartItemId:number) => {
+    const removeFromCart = async (cartItemId: number) => {
         try {
             await api.delete(`/Cart/DeleteCartItem`, { data: { cartItemId } });
-            setCartItems(prev => prev.filter((item:any) => item.id !== cartItemId));
+            setCartItems(prev => prev.filter((item: any) => item.id !== cartItemId));
         } catch (error) {
             console.error("خطأ في حذف المنتج", error);
         }

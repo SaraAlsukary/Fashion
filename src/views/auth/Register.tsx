@@ -16,7 +16,7 @@ export default function Register() {
     });
 
     const [showPassword, setShowPassword] = useState(false);
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState<any>({});
 
     // استخراج دالة التسجيل وحالة التحميل والخطأ من الـ Hook
     const { register, isRegistering, registerError } = useAuth();
@@ -24,7 +24,7 @@ export default function Register() {
     // دالة لتحديث أي حقل ديناميكياً
     const handleInputChange = (key: string, value: string) => {
         setFormData(prev => ({ ...prev, [key]: value }));
-        if (errors[key]) setErrors(prev => ({ ...prev, [key]: '' }));
+        if (errors[key]) setErrors((prev:any) => ({ ...prev, [key]: '' }));
     };
 
     const validateForm = () => {

@@ -14,7 +14,7 @@ export default function Login() {
 
     const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-    const handleLogin = (e) => {
+    const handleLogin = (e:any) => {
         e.preventDefault();
         let currentErrors = { email: '', password: '' };
         let isValid = true;

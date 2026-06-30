@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api, { API_BASE_URL, API_IMAGE } from '../services/api';
+import api, { API_IMAGE } from '../services/api';
 
 
 export default function Home() {
