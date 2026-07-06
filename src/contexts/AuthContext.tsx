@@ -1,3 +1,4 @@
+import { jwtDecode } from "jwt-decode";
 import { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -5,7 +6,7 @@ import toast from 'react-hot-toast';
 interface AuthContextType {
     user: any;
     setUser: (user: any) => void;
-    loading: boolean;
+    loading: boolean; 
     logout: () => Promise<void>;
     isAuthenticated: boolean;
 }
@@ -16,10 +17,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+
+    // داخل AuthProvider
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            setUser({ name: "User Name" }); // جلب بيانات المستخدم أو فك التوكن هنا
+            try {
+                // فك التوكن لاستخراج بيانات المستخدم (مثل الاسم، الصلاحيات، الخ)
+                const decodedUser = jwtDecode(token);
+                setUser(decodedUser);
+            } catch (error) {
+                console.error("Invalid token", error);
+                localStorage.removeItem('token'); // تنظيف التوكن إذا كان تالفاً
+                setUser(null);
+            }
         }
         setLoading(false);
     }, []);

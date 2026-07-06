@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import{ AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useContext } from 'react';
@@ -18,20 +18,36 @@ export const useAuth = () => {
     const context = useContext(AuthContext);
     const navigate = useNavigate();
 
+    // داخل المكون:
+
     if (!context) {
         throw new Error('useAuth must be used within an AuthProvider');
     }
     // 1️⃣ دالة تسجيل الدخول (Login)
+    // 1️⃣ دالة تسجيل الدخول (Login)
     const loginMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
         mutationFn: async (credentials) => {
-            const { data } = await api.post('/api/Auth/Login', credentials);
+            const { data } = await api.post('/Auth/Login', credentials);
+            console.log(data.data)
             return data;
         },
-        onSuccess: () => {
-            toast.success("تم تسجيل الدخول")
-            // هنا يمكنك حفظ الـ Token في الـ LocalStorage أو Context
-            // localStorage.setItem('token', data.token);
-            navigate('/'); // التوجيه للصفحة الرئيسية بعد النجاح
+        onSuccess: (data) => {
+            toast.success("تم تسجيل الدخول");
+            console.log(data);
+
+            // 💡 1. استخدام المسار الصحيح للتوكن بناءً على استجابة الـ API
+            const token = data.data.jwtAuthResult.accessToken;
+            const roles = data.data.getRoles;
+
+            // حفظ التوكن في الـ LocalStorage
+            localStorage.setItem('token', token);
+            localStorage.setItem('refreshToken', data.data.jwtAuthResult.refreshToken.refreshTokenString);
+            // 💡 2. تحديث حالة المستخدم في الـ Context فوراً حتى تتغير حالة الواجهة
+            // قمنا بتمرير التوكن والصلاحيات، ويمكنك تعديلها بناءً على ما يحتاجه تطبيقك
+            context.setUser({ token, roles, isAuthenticated: true });
+
+            // التوجيه للصفحة الرئيسية بعد النجاح
+            navigate('/');
         }
     });
 
@@ -41,11 +57,11 @@ export const useAuth = () => {
             const { data } = await api.post('/Auth/Register', userData);
             return data;
         },
-        onSuccess: () => {
+        onSuccess: (userData) => {
             toast.success(" يرجى تأكيد الحساب حتى تكتمل عملية انشاء الحساب")
-
+            
             // التوجيه لصفحة تأكيد البريد الإلكتروني بعد إنشاء الحساب بنجاح
-            navigate('/auth/confirm-email');
+            navigate('/auth/confirm-email', { state: { email: userData.email } });
         }
     });
 
@@ -62,22 +78,58 @@ export const useAuth = () => {
             navigate('/auth/login');
         }
     });
+    // 3️⃣ دالة تأكيد البريد الإلكتروني عبر الـ OTP
+    const confirmPasswordForOtpMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
+        mutationFn: async (otpData) => {
+            const { data } = await api.post('/Auth/ConfirmEmail', otpData);
+            return data;
+        },
+        onSuccess: (userData) => {
+            toast.success(" تم تأكيد رمز التحقق")
+            navigate('/auth/reset-password', { state: { email: userData.email, code: userData.code } });
+
+            // التوجيه لصفحة تسجيل الدخول بعد تأكيد الحساب
+        }
+    });
 
     // 4️⃣ دالة استعادة كلمة المرور (Forgot Password)
     const forgotPasswordMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
         mutationFn: async (emailData) => {
+            // نرسل هنا كائن مثل { email: "..." }
             const { data } = await api.post('/Auth/ForgotPassword', emailData);
             return data;
         },
-        onSuccess: () => {
-            toast.success(" تم تسجيل الخروج بنجاح")
-
-            // التوجيه لصفحة تسجيل الدخول بعد تأكيد الحساب
-            navigate('/');
+        // المعامل الأول (data) هو رد السيرفر، المعامل الثاني (variables) هو ما أرسلته للدالة
+        onSuccess: (_, variables) => {
+            toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
+            
+            // 💡 الحل هنا: نأخذ الإيميل من variables وليس من رد السيرفر
+            navigate('/auth/reset-password', { state: { email: variables.email } });
         }
-        // ملاحظة: معالجة النجاح والخطأ تمت داخل الـ Component نفسه لإظهار الرسالة الخضراء
     });
+    const ResendOtpMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
+        mutationFn: async (emailData) => {
+            const { data } = await api.post('/Auth/ResendOtpCode', emailData);
+            return data;
+        },
+        onSuccess: () => {
+            toast.success(" تم اعادة ارسال رمز التحقق")
 
+        }
+    });
+    const ResetPasswordMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
+        mutationFn: async (userData) => {
+            const { data } = await api.post('/Auth/ResetPassword', userData);
+            console.log(data)
+            return data;
+
+        },
+        onSuccess: () => {
+            toast.success(" تم تغيير كلمة المرور")
+            navigate('/auth/login')
+
+        }
+    });
     return {
         // مُخرجات Login
         login: loginMutation.mutate,
@@ -97,5 +149,21 @@ export const useAuth = () => {
         // مُخرجات Forgot Password
         forgotPassword: forgotPasswordMutation.mutate,
         isSendingReset: forgotPasswordMutation.isPending,
+
+        // مُخرجات Confirm OTP for reset password
+        confirmPasswordForOtp: confirmPasswordForOtpMutation.mutate,
+        isConfirmingForPassword: confirmPasswordForOtpMutation.isPending,
+        confirmingForPasswordError: confirmPasswordForOtpMutation.error,
+
+        // reset otp
+        resendOtp: ResendOtpMutation.mutate,
+        isResending: ResendOtpMutation.isPending,
+        resendError: ResendOtpMutation.error,
+
+
+        // reset Password
+        resetPassword: ResetPasswordMutation.mutate,
+        isResetting: ResetPasswordMutation.isPending,
+        resetError: ResetPasswordMutation.error,
     };
 };

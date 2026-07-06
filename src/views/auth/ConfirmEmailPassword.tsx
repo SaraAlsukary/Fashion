@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useLocation } from 'react-router-dom';
 
-export default function ConfirmEmail() {
+export default function ConfirmEmailPassword() {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [localError, setLocalError] = useState('');
     const location = useLocation();

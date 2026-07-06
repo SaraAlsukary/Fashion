@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom"
 import Footer from "../templates/Footer"
 import Header from "../templates/Header"
+import FloatingCartButton from "../ui/FloatingCartButton"
 
 
 const MainLayout = () => {
@@ -9,7 +10,7 @@ const MainLayout = () => {
             <Header />
             <Outlet />
             <Footer />
-
+            <FloatingCartButton />
         </div>
 
     )
