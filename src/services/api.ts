@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 
-export const API_BASE_URL = 'http://www.marketexpress.somee.com/api';
+// export const API_BASE_URL = 'http://www.marketexpress.somee.com/api';
+export const API_BASE_URL = '/api';
 export const API_IMAGE = 'https://res.cloudinary.com/dosaekozq/image';
 
 const api = axios.create({
