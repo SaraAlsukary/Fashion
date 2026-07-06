@@ -1,4 +1,4 @@
-import axios, { type InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
 // export const API_BASE_URL = 'http://www.marketexpress.somee.com/api';
 export const API_BASE_URL = '/api';
@@ -26,20 +26,23 @@ const processQueue = (error: any, token: string | null = null) => {
     failedQueue = [];
 };
 
-// 1️⃣ Request Interceptor
+// 1️⃣ Request Interceptor (تلقيم التوكن تلقائياً مع كل طلب صادر)
 api.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
+    (config) => {
         let token = localStorage.getItem('token');
-        if (token && config.headers) {
+        if (token) {
+            // تنظيف التوكن من أي اقتباسات زائدة الناتجة عن التخزين
             token = token.replace(/^"(.*)"$/, '$1').trim();
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error: unknown) => Promise.reject(error)
+    (error) => {
+        return Promise.reject(error);
+    }
 );
 
-// 2️⃣ Response Interceptor (المُعَدل لحل مشكلة التزامن)
+// 2️⃣ Response Interceptor (معالجة انتهاء صلاحية التوكن 401)
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -47,7 +50,6 @@ api.interceptors.response.use(
 
         if (error.response?.status === 401 && !originalRequest._retry) {
 
-            // 💡 إذا كان هناك طلب تجديد شغال حالياً، ضع هذا الطلب في قائمة الانتظار
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
@@ -63,55 +65,58 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             return new Promise((resolve, reject) => {
-                const refreshToken = localStorage.getItem('refreshToken');
-                const accessToken = localStorage.getItem('token');
+                let refreshToken = localStorage.getItem('refreshToken');
+                let accessToken = localStorage.getItem('token');
 
-                if (!refreshToken) {
+                if (!refreshToken || !accessToken) {
                     isRefreshing = false;
-                    reject(new Error("No refresh token available"));
+                    reject(new Error("لا يوجد توكن متوفر للتجديد"));
                     return;
                 }
 
-                // إرسال الطلب بالأسماء المطلوبة من الباك اند كاملاً
+                // تنظيف التوكنات قبل الإرسال
+                accessToken = accessToken.replace(/^"(.*)"$/, '$1').trim();
+                refreshToken = refreshToken.replace(/^"(.*)"$/, '$1').trim();
+
+                // إرسال كلا التوكنين كما يطلب السيرفر بناءً على تجربة Swagger الناجحة
                 axios.post(`${API_BASE_URL}/Auth/RefreshToken`, {
-                    accessToken: accessToken?.replace(/^"(.*)"$/, '$1').trim(),
-                    refreshToken: refreshToken.replace(/^"(.*)"$/, '$1').trim()
+                    accessToken: accessToken,
+                    refreshToken: refreshToken
                 })
                     .then((response) => {
-                        if (response.status === 200) {
-                            // 1. اطبع الاستجابة في الكونسول لتراها بعينك وتتأكد من أسماء الحقول
-                            console.log("Refresh Response Data:", response.data);
+                        if (response.status === 200 && response.data.success) {
 
-                            // 2. تأكد من الاسم الصحيح (مثلاً لو كان Token أو accessToken)
-                            let newAccessToken = response.data.accessToken || response.data.token;
-                            let newRefreshToken = response.data.refreshToken;
+                            // الوصول للبيانات الحقيقية .data.data حسب رد السيرفر في Swagger
+                            const resultData = response.data.data;
+
+                            let newAccessToken = resultData.accessToken;
+                            let newRefreshToken = resultData.refreshToken;
 
                             if (!newAccessToken) {
-                                console.error("لم يتم العثور على Access Token في استجابة السيرفر!");
-                                throw new Error("Invalid token response");
+                                throw new Error("لم يتم العثور على التوكن الجديد في استجابة السيرفر");
                             }
 
-                            // 3. تنظيف التوكنات الجديدة من أي علامات اقتباس زائدة قبل التخزين
-                            newAccessToken = newAccessToken.replace(/^"(.*)"$/, '$1').trim();
+                            // تخزين التوكنات الجديدة
                             localStorage.setItem('token', newAccessToken);
 
                             if (newRefreshToken) {
-                                newRefreshToken = newRefreshToken.replace(/^"(.*)"$/, '$1').trim();
                                 localStorage.setItem('refreshToken', newRefreshToken);
-                                console.log("تم تحديث الـ Refresh Token بنجاح");
                             }
 
-                            // تحديث طلب الاكسيوس الحالي وتمريره للطابور
+                            // تحديث طلب الـ API الحالي وتمريره للطابور
                             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                             processQueue(null, newAccessToken);
 
                             resolve(api(originalRequest));
+                        } else {
+                            throw new Error(response.data.message || "فشلت عملية التجديد");
                         }
                     })
                     .catch((refreshError) => {
-                        // إذا فشل التجديد كلياً، نرفض كل الطلبات المنتظرة ونوجه للوجن
+                        console.error("فشل تجديد التوكن تماماً:", refreshError);
                         processQueue(refreshError, null);
 
+                        // طرد المستخدم فقط إذا فشل التجديد فعلياً
                         localStorage.removeItem('token');
                         localStorage.removeItem('refreshToken');
                         window.location.href = '/auth/login';
