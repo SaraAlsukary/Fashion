@@ -17,7 +17,7 @@ const ResetPassword = lazy(() => import("./views/auth/ResetPassword"));
 const AllStores = lazy(() => import("./views/store/AllStores"));
 const StoreDetails = lazy(() => import("./views/store/StoreDetails"));
 const ProductDetails = lazy(() => import("./views/store/ProductDetails"));
-const Profile = lazy(() => import("./views/user/Profile"));
+const UserProfileDashboard = lazy(() => import("./views/user/UserProfileDashboard"));
 const Cart = lazy(() => import("./views/store/Cart"));
 const NotFound = lazy(() => import('./views/NotFound'));
 const SearchPage = lazy(() => import('./views/store/SearchPage'));
@@ -64,7 +64,7 @@ const router = createBrowserRouter([
       , {
         path: "my-profile",
         element: <Suspense fallback={<Loading />}>
-          <Profile />
+          <UserProfileDashboard />
         </Suspense>
       },
       {
