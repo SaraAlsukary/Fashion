@@ -55,7 +55,7 @@ export const useAddRating = () => {
 
         // عند نجاح الإضافة، نقوم بإلغاء التخزين المؤقت للتقييم السابق 
         // ليقوم React Query بجلبه مرة أخرى وعرض التحديث الجديد تلقائياً
-        onSuccess: (data, variables) => {
+        onSuccess: (_, variables) => {
             queryClient.invalidateQueries({
                 queryKey: ['productRating', variables.productId],
             });
