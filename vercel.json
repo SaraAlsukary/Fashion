@@ -3,6 +3,10 @@
         {
             "source": "/api/:path*",
             "destination": "http://www.marketexpress.somee.com/api/:path*"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
     ]
 }
