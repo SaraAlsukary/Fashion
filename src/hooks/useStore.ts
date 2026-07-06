@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
+import axios, { AxiosError } from 'axios';
 import api from '../services/api'; // تأكد من المسار
 import toast from 'react-hot-toast';
 
@@ -185,12 +185,26 @@ export const useStore = () => {
 
     const addStoreRequestMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
         mutationFn: async (requestData) => {
-            const { data } = await api.post('/StoreRequest/Add', requestData);
+            const { data } = await axios.post('http://www.marketexpress.somee.com/api/StoreRequest/Add', requestData, {
+                headers:
+                {
+                    // أو أضف توكن المصادقة فقط إذا كان مطلوباً
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type':"multipart/form-data"
+                }
+
+            });
             return data;
         },
         onSuccess: () => {
             toast.success("تم إرسال الطلب بنجاح");
+            
             queryClient.invalidateQueries({ queryKey: ['userStoreRequests'] });
+        },
+        onError: (err) => {
+            toast.error("حدث خطأ");
+            console.log(err)
+            console.log(err.message)
         }
     });
 
