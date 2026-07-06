@@ -5,7 +5,8 @@ import App from './App.tsx'
 // 1. استيراد المكونات المطلوبة من React Query
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext.tsx';
-
+// أضف هذا السطر في أعلى الملف مباشرة
+import 'leaflet/dist/leaflet.css';
 // 2. إنشاء نسخة (Instance) جديدة من الـ QueryClient خارج المكون
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api'; // افترضنا أن هذا مسار ملف أكسيوس الخاص بك
 import toast from 'react-hot-toast';
+import { useContext } from 'react';
+import { AuthContext } from '../contexts/AuthContext';
 
 // واجهات البيانات (Interfaces) المتوقعة للسلة
 export interface CartItem {
@@ -29,8 +31,15 @@ export const useGetCartItems = () => {
 // 2️⃣ إضافة منتج إلى السلة (POST)
 export const useAddToCart = () => {
     const queryClient = useQueryClient();
+    const { isAuthenticated } = useContext(AuthContext)
+
     return useMutation({
+      
         mutationFn: async (payload: { quantity: number; productSizeId: number }) => {
+            if (!isAuthenticated) {
+                toast.error('يجب تسجيل الدخول أولاً')
+                return;
+            }
             // نمرر الـ payload مباشرة كـ Body وهو المطلوب في السيرفر
             const { data } = await api.post('/Cart/AddToCart', payload);
             return data;
@@ -40,6 +49,10 @@ export const useAddToCart = () => {
             // تأكد من تحديث السلة تلقائياً عند النجاح
             queryClient.invalidateQueries({ queryKey: ['cartItems'] });
         },
+        onError: (err) => {
+            console.log(err)
+            toast.error('حصل خطأ')
+        }
     });
 };
 
@@ -63,9 +76,13 @@ export const useUpdateCartItem = () => {
 // 3️⃣ حذف عنصر من السلة
 export const useDeleteCartItem = () => {
     const queryClient = useQueryClient();
-
+    const { isAuthenticated } = useContext(AuthContext)
     return useMutation({
         mutationFn: async (cartItemId: number) => {
+            if (!isAuthenticated) {
+                toast.error('يجب تسجيل الدخول أولاً')
+                return;
+            }
             // ❌ لا ترسل الـ ID في الرابط (كما كان سابقاً)
             // ✅ أرسله كـ Body داخل كائن data لأن Axios يتطلب ذلك في طلبات الـ DELETE
             const { data } = await api.delete(`/Cart/DeleteCartItem`, {
@@ -79,5 +96,9 @@ export const useDeleteCartItem = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cartItems'] });
         },
+        onError: (err) => {
+            console.log(err)
+            toast.error('حصل خطأ')
+        }
     });
 };

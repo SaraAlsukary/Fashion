@@ -21,12 +21,12 @@ export default function Home() {
                         منصتك المتكاملة لبيع وشراء أحدث صيحات الموضة. تصفح، تسوق، وعش التجربة الفريدة.
                     </p>
                     <div className="animate-fade-in-up delay-400 pt-6 flex justify-center gap-4">
-                        <button className="bg-white text-moda-purple hover:bg-gray-100 px-8 py-3.5 rounded-full font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                        <Link to={'/stores'} className="bg-white text-moda-purple hover:bg-gray-100 px-8 py-3.5 rounded-full font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
                             تصفح المتاجر الآن
-                        </button>
-                        <button className="bg-transparent border border-white/40 hover:border-white hover:bg-white/10 text-white px-8 py-3.5 rounded-full font-medium transition-all duration-300">
-                            تعرف علينا
-                        </button>
+                        </Link>
+                        <Link to={'/auth/join'} className="bg-transparent border border-white/40 hover:border-white hover:bg-white/10 text-white px-8 py-3.5 rounded-full font-medium transition-all duration-300">
+                            انضم الينا
+                        </Link>
                     </div>
                 </div>
             </section>

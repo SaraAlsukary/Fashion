@@ -24,7 +24,7 @@ export default function Register() {
     // دالة لتحديث أي حقل ديناميكياً
     const handleInputChange = (key: string, value: string) => {
         setFormData(prev => ({ ...prev, [key]: value }));
-        if (errors[key]) setErrors((prev:any) => ({ ...prev, [key]: '' }));
+        if (errors[key]) setErrors((prev: any) => ({ ...prev, [key]: '' }));
     };
 
     const validateForm = () => {
@@ -197,18 +197,24 @@ export default function Register() {
                     type="submit"
                     disabled={isRegistering}
                     className={`w-full py-3 rounded-xl font-bold transition-all shadow-md mt-4 ${isRegistering
-                            ? 'bg-gray-400 cursor-not-allowed text-white'
-                            : 'bg-moda-purple hover:bg-moda-purpleHover text-white hover:shadow-lg active:scale-[0.98]'
+                        ? 'bg-gray-400 cursor-not-allowed text-white'
+                        : 'bg-moda-purple hover:bg-moda-purpleHover text-white hover:shadow-lg active:scale-[0.98]'
                         }`}
                 >
                     {isRegistering ? 'جاري إنشاء الحساب...' : 'إنشاء حساب'}
                 </button>
             </form>
-
+           
             <p className="text-center text-sm text-gray-500 mt-6">
                 لديك حساب بالفعل؟{' '}
                 <Link to="/auth/login" className="font-bold text-moda-purple hover:underline">
                     تسجيل الدخول
+                </Link>
+            </p>
+            <p className="text-center text-sm text-gray-500 mt-8">
+                أريد العودة للخطوة السابقة؟{' '}
+                <Link to="/auth/join" className="font-bold text-moda-purple hover:underline">
+                    تغيير نوع الحساب
                 </Link>
             </p>
         </div>

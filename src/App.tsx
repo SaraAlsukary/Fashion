@@ -21,6 +21,8 @@ const Profile = lazy(() => import("./views/user/Profile"));
 const Cart = lazy(() => import("./views/store/Cart"));
 const NotFound = lazy(() => import('./views/NotFound'));
 const SearchPage = lazy(() => import('./views/store/SearchPage'));
+const Join = lazy(() => import('./views/auth/Join'));
+const StoreRegister = lazy(() => import('./views/auth/StoreRegister'));
 // 2. تصميم شاشة التحميل الاحترافية (Professional Loader)
 // يمكنك فصل هذا المكون في ملف مستقل لاحقاً (مثلاً: src/components/ui/Loader.jsx)
 
@@ -38,12 +40,12 @@ const router = createBrowserRouter([
         element: <Suspense fallback={<Loading />}>
           <NotFound />
         </Suspense>,
-      },{
-        path:"stores",
+      }, {
+        path: "stores",
         element: <Suspense fallback={<Loading />}>
           <AllStores />
         </Suspense>
-      },{
+      }, {
         path: "stores/:storeId",
         element: <Suspense fallback={<Loading />}>
           <StoreDetails />
@@ -71,8 +73,9 @@ const router = createBrowserRouter([
           <SearchPage />
         </Suspense>
       },
+
     ]
-    
+
   },
   // مسارات المصادقة
   {
@@ -110,6 +113,18 @@ const router = createBrowserRouter([
           <ResetPassword />
         </Suspense>
       }
+      , {
+        path: "store",
+        element: <Suspense fallback={<Loading />}>
+          <StoreRegister />
+        </Suspense>
+      }, {
+        path: "join",
+        element: <Suspense fallback={<Loading />}>
+          <Join />
+        </Suspense>
+      }
+
     ]
   }
 ]);
