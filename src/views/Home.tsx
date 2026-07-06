@@ -15,7 +15,7 @@ export default function Home() {
                         مرحباً بك في عالم الأناقة الفاخرة ✨
                     </span>
                     <h2 className="animate-fade-in-up delay-200 text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-wide max-w-4xl mx-auto drop-shadow-lg">
-                        اكتشف الموضة من منظور المبدعين والمتاجر العالمية
+                        اكتشف الموضة من منظور المبدعين والمتاجر المميزة
                     </h2>
                     <p className="animate-fade-in-up delay-300 text-gray-200 text-base md:text-lg lg:text-xl max-w-2xl mx-auto font-light drop-shadow-md">
                         منصتك المتكاملة لبيع وشراء أحدث صيحات الموضة. تصفح، تسوق، وعش التجربة الفريدة.
