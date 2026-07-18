@@ -2,10 +2,13 @@ import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useGetCartItems } from '../../hooks/useCart';
+import { useUserProfile } from '../../hooks/useUser';
 
 const Header = () => {
-    const { isAuthenticated, user, logout } = useContext(AuthContext);
+    const { isAuthenticated, logout } = useContext(AuthContext);
     const { data: cartResponse } = useGetCartItems();
+    const { data: user, isLoading: userLoading } = useUserProfile();
+
     const navigate = useNavigate();
 
     const cartItemsCount = isAuthenticated ? (cartResponse?.data?.cartItemDto?.length || 0) : 0;
@@ -79,19 +82,33 @@ const Header = () => {
                     <div className="h-8 w-[1px] bg-gray-200 hidden sm:block"></div>
 
                     {/* التحقق من حالة تسجيل الدخول */}
-                    {isAuthenticated ? (
+                    {userLoading ? "جاري تحميل بيانات المستخدم..." : isAuthenticated ? (
                         <div className="flex items-center gap-3">
                             <button className="p-2.5 hover:bg-gray-100 rounded-full transition-all duration-300 hover:rotate-12 hover:scale-110" title="الإشعارات">
                                 <span className="text-xl">🔔</span>
                             </button>
 
                             <div className="flex items-center gap-3 bg-gray-50 p-1 pr-3 rounded-full border border-gray-100 shadow-sm">
-                                <span onClick={() => navigate('/my-profile')} className="text-sm font-bold text-gray-700 hidden sm:block truncate max-w-[100px] cursor-pointer">
-                                    {user?.name || 'مستخدم'}
+                                {/* عرض اسم المستخدم */}
+                                <span onClick={() => navigate('/my-profile')} className="text-sm font-bold text-gray-700 hidden sm:block truncate max-w-[100px] cursor-pointer hover:text-moda-purple transition-colors">
+                                    {user?.firstName || 'مستخدم'}
                                 </span>
-                                <div onClick={() => navigate('/my-profile')} className="w-8 h-8 bg-moda-purple/10 text-moda-purple rounded-full flex items-center justify-center font-bold cursor-pointer">
-                                    👤
+
+                                {/* عرض صورة المستخدم أو أول حرف من اسمه */}
+                                <div onClick={() => navigate('/my-profile')} className="w-8 h-8 rounded-full flex items-center justify-center font-bold cursor-pointer overflow-hidden border border-moda-purple/30 bg-white">
+                                    {user?.profilePhoto || localStorage.getItem('userPhoto') ? (
+                                        <img
+                                            src={user?.profilePhoto ? `http://www.marketexpress.somee.com/${user?.profilePhoto}` : localStorage.getItem('userPhoto')!}
+                                            alt={user?.firstName || 'User Profile'}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-moda-purple text-sm">
+                                            {user?.firstName ? user.firstName.charAt(0).toUpperCase() : '👤'}
+                                        </span>
+                                    )}
                                 </div>
+
                                 <div className="h-4 w-[1px] bg-gray-300"></div>
                                 <button
                                     onClick={logout}

@@ -52,7 +52,7 @@ export default function StoreDetails() {
                     <div className="flex flex-col md:flex-row items-center md:items-end gap-5 -mt-16 md:-mt-20 z-10 text-center md:text-right w-full md:w-auto">
                         <div className="w-32 h-32 bg-white rounded-2xl p-2 border border-gray-100 shadow-md overflow-hidden flex items-center justify-center">
                             <img
-                                src={currentStore.logo ? `${currentStore.logo}` : '/placeholder-store.png'}
+                                src={currentStore.logo ? `http://www.marketexpress.somee.com/${currentStore.logo}` : '/placeholder-store.png'}
                                 alt={currentStore.storeName} // 💡 تم التحديث إلى storeName
                                 className="w-full h-full object-cover rounded-xl"
                             />

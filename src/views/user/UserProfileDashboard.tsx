@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useAllOrders, useCancelOrder, useOrderItems } from '../../hooks/useOrder';
-import { useUpdateProfilePhoto } from '../../hooks/useUser';
-import { useWallet } from '../../hooks/useWallet'; // الهوكس السابقة
-import { useAllTransactions } from '../../hooks/useTransaction'; // الهوكس السابقة
+// تمت إضافة useUserProfile هنا لجلب بيانات المستخدم
+import { useUpdateProfilePhoto, useUserProfile } from '../../hooks/useUser'; 
+import { useWallet } from '../../hooks/useWallet'; 
+import { useAllTransactions } from '../../hooks/useTransaction'; 
 import toast from 'react-hot-toast';
 
 export default function UserProfileDashboard() {
@@ -10,6 +11,11 @@ export default function UserProfileDashboard() {
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
     // استدعاء الهوكس
+    // ---------------------------------
+    // تمت إضافة هذا الهوك لجلب بيانات اليوزر
+    const { data: userProfile, isLoading: userLoading } = useUserProfile(); 
+    // ---------------------------------
+
     const { data: orders, isLoading: ordersLoading } = useAllOrders();
     const { data: orderItems, isLoading: itemsLoading } = useOrderItems(selectedOrderId);
     const cancelOrderMutation = useCancelOrder();
@@ -80,23 +86,46 @@ export default function UserProfileDashboard() {
                     {activeTab === 'profile' && (
                         <div>
                             <h2 className="text-lg font-bold text-gray-900 mb-4">إعدادات الحساب</h2>
-                            <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                <div className="relative group w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-2 border-amber-400 shadow-inner">
-                                    <img
-                                        src={localStorage.getItem('userPhoto') || "https://via.placeholder.com/150"}
-                                        alt="Profile"
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <label className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-center p-1">
-                                        تعديل الصورة
-                                        <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
-                                    </label>
+                            
+                            {userLoading ? (
+                                <p className="text-sm text-gray-500">جاري تحميل بيانات الحساب... ⏳</p>
+                            ) : (
+                                <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                    <div className="relative group w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-2 border-amber-400 shadow-inner flex-shrink-0">
+                                        <img
+                                            // ربط صورة المستخدم القادمة من الهوك، وإذا لم توجد نستخدم التخزين المحلي كبديل
+                                            src={`http://www.marketexpress.somee.com/${userProfile?.profilePhoto}` || localStorage.getItem('userPhoto') || "https://via.placeholder.com/150"}
+                                            alt="Profile"
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <label className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-center p-1">
+                                            تعديل الصورة
+                                            <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                                        </label>
+                                    </div>
+                                    <div className="text-center sm:text-right flex-1">
+                                        {/* عرض بيانات المستخدم القادمة من الهوك هنا */}
+                                        <h3 className="font-bold text-gray-900 text-lg mb-1">
+                                            {userProfile?.firstName ? `مرحباً بك، ${userProfile.firstName+' '+userProfile.lastName}` : 'مرحباً بك في لوحتك الخاصة'}
+                                        </h3>
+                                        <div className="space-y-1 mb-3">
+                                            {userProfile?.email && (
+                                                <p className="text-sm text-gray-600 flex items-center justify-center sm:justify-start gap-2">
+                                                    ✉️ {userProfile.email}
+                                                </p>
+                                            )}
+                                            {userProfile?.phoneNumber && (
+                                                <p className="text-sm text-gray-600 flex items-center justify-center sm:justify-start gap-2">
+                                                    📱 {userProfile.phoneNumber}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1 bg-white inline-block px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
+                                            💡 يمكنك الضغط على الصورة مباشرة لتحميل صورة ملف شخصي جديدة.
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="text-center sm:text-right">
-                                    <h3 className="font-bold text-gray-800 text-base">مرحباً بك في لوحتك الخاصة</h3>
-                                    <p className="text-xs text-gray-500 mt-1">يمكنك الضغط على الصورة مباشرة لتحميل صورة ملف شخصي جديدة ثنائية الامتداد.</p>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     )}
 
