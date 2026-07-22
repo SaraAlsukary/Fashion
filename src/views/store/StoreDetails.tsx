@@ -29,7 +29,8 @@ export default function StoreDetails() {
     if (!currentStore) {
         return <div className="text-center py-24 text-red-500 font-bold">المتجر غير موجود أو تم حذفه.</div>;
     }
-
+    // "https://res.cloudinary.com/dosaekozq/image/upload/v1781204237/photo_3_2026-06-11_21-55-49_dqcrif.jpg"
+    // console.log(productsData)
     // تنسيق بسيط لأوقات الدوام لحذف الثواني الزائدة (مثلاً تحويل 12:00:00 إلى 12:00)
     const formatTime = (timeStr: string) => {
         if (!timeStr) return '';
@@ -141,7 +142,7 @@ export default function StoreDetails() {
                                     {/* قسم الصورة والشارات */}
                                     <div className="h-64 bg-gray-50 relative overflow-hidden">
                                         <img
-                                            src={product.image ? product.image : '/placeholder-product.png'}
+                                            src={product.image ? product.image.includes('https://res.cloudinary.com') ? product.image :`http://www.marketexpress.somee.com/${product.image}`: '/placeholder-product.png'}
                                             alt={product.name}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />

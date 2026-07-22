@@ -20,6 +20,7 @@ export default function Join() {
             navigate('/auth/login'); // عدل المسار حسب الرابط في مشروعك
         }
     };
+    const roleNames = JSON.parse(localStorage.getItem('roleNames')!);
 
     return (
         <div className="animate-fade-in-up delay-100">
@@ -54,7 +55,20 @@ export default function Join() {
                 {/* خيار: حساب متجر */}
                 <button
                     type="button"
-                    onClick={() => setAccountType('store')}
+                    // تعطيل الزر إذا كان المستخدم يمتلك صلاحية 'Admin'
+
+                    onClick={() => {
+                        // 💡 التحقق مما إذا كان المستخدم لديه متجر بالفعل (تأكد أن اسم الصلاحية الصحيح هنا، ربما 'StoreOwner' بدلاً من 'Admin')
+                        if (roleNames.includes('Admin')) {
+                            toast.error('لا يمكنك انشاء أكثر من حساب متجر لحسابك!');
+
+                            // 👈 إضافة return ضرورية جداً هنا لمنع تنفيذ باقي الأوامر
+                            return;
+                        }
+
+                        // لن يتم الوصول إلى هذا السطر إلا إذا كان المستخدم لا يملك الصلاحية المذكورة أعلاه
+                        setAccountType('store');
+                    }}
                     className={`w-full p-4 rounded-xl border-2 text-right transition-all flex items-center gap-4 outline-none ${accountType === 'store'
                         ? 'border-moda-purple bg-purple-50/50'
                         : 'border-gray-200 hover:border-gray-300 bg-white'
@@ -71,8 +85,14 @@ export default function Join() {
                         <h3 className={`font-bold ${accountType === 'store' ? 'text-moda-purple' : 'text-gray-900'}`}>
                             حساب متجر
                         </h3>
-                        <p className="text-sm text-gray-500 mt-1">افتح متجرك الخاص وابدأ ببيع منتجاتك للعملاء.</p>
-                        <p className="text-sm text-red-800 mt-1">يجب أن يكون لديك حساب مستخدم أولاً ومسجل دخول به</p>
+                        {roleNames.includes('Admin') ?
+                            <p className="text-sm text-red-800 mt-1">أنت بالفعل تملك حساب متجر حيث الحساب الواحد يدعم انشاء حساب متجر واحد</p>
+
+                            : <>
+                                <p className="text-sm text-gray-500 mt-1">افتح متجرك الخاص وابدأ ببيع منتجاتك للعملاء.</p>
+                                <p className="text-sm text-red-800 mt-1">يجب أن يكون لديك حساب مستخدم أولاً ومسجل دخول به</p>
+                            </>
+                        }
                     </div>
                 </button>
             </div>

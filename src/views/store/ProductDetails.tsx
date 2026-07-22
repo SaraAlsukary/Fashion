@@ -45,8 +45,11 @@ export default function ProductDetails() {
     }, [colorVariants, selectedVariantId]);
 
     const selectedVariant = colorVariants.find((v: any) => v.id === selectedVariantId) || colorVariants[0];
-    const currentImage = selectedVariant?.image || product?.image || '/placeholder-product.png';
-
+    const currentImage = selectedVariant?.image
+        ? (selectedVariant.image.includes('https://res.cloudinary.com') ? selectedVariant.image : `http://www.marketexpress.somee.com/${selectedVariant.image}`)
+        : product?.image
+            ? (product.image.includes('https://res.cloudinary.com') ? product.image : `http://www.marketexpress.somee.com/${product.image}`)
+            : '/placeholder-product.png';
     const { data: sizesResponse, isLoading: isLoadingSizes } = useGetSizesByProductColor(pId, selectedVariant?.color || null);
     const { data: suggestionsResponse, isLoading: isLoadingSuggestions } = useGetSuggestProducts(pId);
     const availableSizes = sizesResponse?.data || [];
@@ -57,7 +60,6 @@ export default function ProductDetails() {
         setSelectedVariantId(variantId);
         setSelectedSizeId(null);
     };
-
     const handleAddToCart = () => {
         if (!selectedSizeId) {
             toast.error("الرجاء اختيار المقاس أولاً!");

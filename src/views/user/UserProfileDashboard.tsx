@@ -1,22 +1,25 @@
 import { useState } from 'react';
 import { useAllOrders, useCancelOrder, useOrderItems } from '../../hooks/useOrder';
 // تمت إضافة useUserProfile هنا لجلب بيانات المستخدم
-import { useUpdateProfilePhoto, useUserProfile } from '../../hooks/useUser'; 
-import { useWallet } from '../../hooks/useWallet'; 
-import { useAllTransactions } from '../../hooks/useTransaction'; 
+import { useUpdateProfilePhoto, useUserProfile } from '../../hooks/useUser';
+import { useWallet } from '../../hooks/useWallet';
+import { useAllTransactions } from '../../hooks/useTransaction';
 // 👇 تمت إضافة هوكس المتاجر
-import { useGetAllRequestStoreByUser, useStore } from '../../hooks/useStore'; 
+import { useGetAllRequestStoreByUser, useStore } from '../../hooks/useStore';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 export default function UserProfileDashboard() {
     // 👇 تمت إضافة 'storeRequests'
     const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wallet' | 'storeRequests'>('profile');
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+    const navigate = useNavigate()
+    const roleNames = JSON.parse(localStorage.getItem('roleNames')!);
 
     // استدعاء الهوكس
     // ---------------------------------
     // تمت إضافة هذا الهوك لجلب بيانات اليوزر
-    const { data: userProfile, isLoading: userLoading } = useUserProfile(); 
+    const { data: userProfile, isLoading: userLoading } = useUserProfile();
     // ---------------------------------
 
     const { data: orders, isLoading: ordersLoading } = useAllOrders();
@@ -31,7 +34,7 @@ export default function UserProfileDashboard() {
     // 👇 هوكس طلبات المتاجر
     // ---------------------------------
     const { data: storeRequestsRes, isLoading: requestsLoading } = useGetAllRequestStoreByUser();
-    const { cancelStoreRequest, isCancelingRequest } = useStore(); 
+    const { cancelStoreRequest, isCancelingRequest } = useStore();
     const storeRequests = storeRequestsRes?.data || [];
 
     // معالجة رفع الصورة الشخصية
@@ -101,6 +104,15 @@ export default function UserProfileDashboard() {
                     >
                         🏪 طلبات فتح متجر
                     </button>
+                    {/* سيظهر هذا الزر فقط إذا كان المستخدم يمتلك صلاحية 'StoreOwner' */}
+                    {roleNames && roleNames.includes('Admin') && (
+                        <button
+                            onClick={() => navigate('/admin')}
+                            className="cursor-pointer bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2"
+                        >
+                            🏪 لوحة تحكم المتجر
+                        </button>
+                    )}
                 </div>
 
                 {/* منطقة المحتوى الديناميكية */}
@@ -110,7 +122,7 @@ export default function UserProfileDashboard() {
                     {activeTab === 'profile' && (
                         <div>
                             <h2 className="text-lg font-bold text-gray-900 mb-4">إعدادات الحساب</h2>
-                            
+
                             {userLoading ? (
                                 <p className="text-sm text-gray-500">جاري تحميل بيانات الحساب... ⏳</p>
                             ) : (
@@ -130,7 +142,7 @@ export default function UserProfileDashboard() {
                                     <div className="text-center sm:text-right flex-1">
                                         {/* عرض بيانات المستخدم القادمة من الهوك هنا */}
                                         <h3 className="font-bold text-gray-900 text-lg mb-1">
-                                            {userProfile?.firstName ? `مرحباً بك، ${userProfile.firstName+' '+userProfile.lastName}` : 'مرحباً بك في لوحتك الخاصة'}
+                                            {userProfile?.firstName ? `مرحباً بك، ${userProfile.firstName + ' ' + userProfile.lastName}` : 'مرحباً بك في لوحتك الخاصة'}
                                         </h3>
                                         <div className="space-y-1 mb-3">
                                             {userProfile?.email && (
@@ -255,8 +267,20 @@ export default function UserProfileDashboard() {
                     {/* 4️⃣ التبويب الجديد: طلبات الإنضمام كتاجر 👇 */}
                     {activeTab === 'storeRequests' && (
                         <div>
-                            <h2 className="text-lg font-bold text-gray-900 mb-4">طلبات الانضمام كصاحب متجر</h2>
-                            
+                            {/* 👇 هنا تمت إضافة الزر الذي طلبته */}
+                            <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
+                                <h2 className="text-lg font-bold text-gray-900">طلبات الانضمام كصاحب متجر</h2>
+                                <button
+                                    onClick={() => {
+                                        // يمكنك هنا إضافة الدالة التي تفتح المودال (النافذة المنبثقة) أو توجه المستخدم لصفحة الطلب
+                                        console.log('فتح نافذة تقديم طلب متجر جديد...');
+                                    }}
+                                    className="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                                >
+                                    ➕ تقديم طلب جديد
+                                </button>
+                            </div>
+
                             {requestsLoading ? (
                                 <p className="text-sm text-gray-500">جاري تحميل الطلبات... ⏳</p>
                             ) : storeRequests && storeRequests.length > 0 ? (
@@ -272,19 +296,18 @@ export default function UserProfileDashboard() {
                                                         {req.createdAt ? new Date(req.createdAt).toLocaleDateString('ar-EG') : 'تاريخ غير متاح'}
                                                     </p>
                                                 </div>
-                                                
+
                                                 <div className="flex items-center gap-3">
                                                     {/* حالة الطلب */}
-                                                    <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${
-                                                        req.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' : 
-                                                        req.status === 'Approved' ? 'bg-green-50 text-green-600' : 
-                                                        req.status === 'Rejected' ? 'bg-red-50 text-red-600' : 
-                                                        'bg-gray-100 text-gray-600'
-                                                    }`}>
-                                                        {req.status === 'Pending' ? 'قيد الانتظار' : 
-                                                         req.status === 'Approved' ? 'تمت الموافقة ✅' : 
-                                                         req.status === 'Rejected' ? 'مرفوض ❌' : 
-                                                         req.status === 'Cancelled' ? 'ملغي' : req.status}
+                                                    <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${req.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
+                                                            req.status === 'Approved' ? 'bg-green-50 text-green-600' :
+                                                                req.status === 'Rejected' ? 'bg-red-50 text-red-600' :
+                                                                    'bg-gray-100 text-gray-600'
+                                                        }`}>
+                                                        {req.status === 'Pending' ? 'قيد الانتظار' :
+                                                            req.status === 'Approved' ? 'تمت الموافقة ✅' :
+                                                                req.status === 'Rejected' ? 'مرفوض ❌' :
+                                                                    req.status === 'Cancelled' ? 'ملغي' : req.status}
                                                     </span>
 
                                                     {/* زر الإلغاء يظهر فقط في حالة قيد الانتظار */}

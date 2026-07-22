@@ -28,7 +28,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setUser(decodedUser);
             } catch (error) {
                 console.error("Invalid token", error);
-                localStorage.removeItem('token'); // تنظيف التوكن إذا كان تالفاً
+                localStorage.removeItem('token'); 
+                localStorage.removeItem('roleNames');
+
+                // تنظيف التوكن إذا كان تالفاً
                 setUser(null);
             }
         }

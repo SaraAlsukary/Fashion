@@ -44,6 +44,7 @@ const loginMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
         // تحويل مصفوفة الكائنات إلى مصفوفة نصوص لتسهيل الفحص 
         // النتيجة ستكون مثلاً: ["User", "SuperAdmin"]
         const roleNames = roles.map((role: { name: string }) => role.name);
+        localStorage.setItem('roleNames', JSON.stringify(roleNames));
 
         // تحديث حالة المستخدم في الـ Context
         context.setUser({ token, roles: roleNames, isAuthenticated: true });
