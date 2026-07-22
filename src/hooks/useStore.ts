@@ -34,7 +34,7 @@ export const useGetStoresByAdmin = () => {
         queryKey: ['adminStores'],
         queryFn: async () => {
             const { data } = await api.get('/Store/GetStoresByAdmin');
-            return data;
+            return data?.data;
         }
     });
 };
@@ -184,29 +184,28 @@ export const useStore = () => {
     // ---------------- StoreRequest Mutations ----------------
 
     const addStoreRequestMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
-        mutationFn: async (requestData) => {
-            const { data } = await axios.post('http://www.marketexpress.somee.com/api/StoreRequest/Add', requestData, {
-                headers:
-                {
-                    // أو أضف توكن المصادقة فقط إذا كان مطلوباً
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type':"multipart/form-data"
-                }
-
-            });
-            return data;
-        },
-        onSuccess: () => {
-            toast.success("تم إرسال الطلب بنجاح");
-            
-            queryClient.invalidateQueries({ queryKey: ['userStoreRequests'] });
-        },
-        onError: (err) => {
-            toast.error("حدث خطأ");
-            console.log(err)
-            console.log(err.message)
-        }
-    });
+    mutationFn: async (requestData) => {
+        // 1. يفضل تغيير http إلى https إذا كان السيرفر يدعم ذلك لتجنب مشكلة Mixed Content
+        // http://www.marketexpress.somee.com/
+        const { data } = await axios.post('http://marketexpress.somee.com/api/StoreRequest/Add', requestData, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                // 2. ❌ قم بإزالة السطر التالي تماماً:
+                // 'Content-Type': "multipart/form-data" 
+            }
+        });
+        return data;
+    },
+    onSuccess: () => {
+        toast.success("تم إرسال الطلب بنجاح");
+        queryClient.invalidateQueries({ queryKey: ['userStoreRequests'] });
+    },
+    onError: (err) => {
+        toast.error("حدث خطأ");
+        console.log(err);
+        console.log(err.message);
+    }
+});
 
     const cancelStoreRequestMutation = useMutation<any, AxiosError<ApiErrorResponse>, string | number>({
         mutationFn: async (storeRequestId) => {

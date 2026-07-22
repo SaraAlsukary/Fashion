@@ -211,12 +211,7 @@ export default function Register() {
                     تسجيل الدخول
                 </Link>
             </p>
-            <p className="text-center text-sm text-gray-500 mt-8">
-                أريد العودة للخطوة السابقة؟{' '}
-                <Link to="/auth/join" className="font-bold text-moda-purple hover:underline">
-                    تغيير نوع الحساب
-                </Link>
-            </p>
+        
         </div>
     );
 }

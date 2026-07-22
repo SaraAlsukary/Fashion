@@ -1,17 +1,23 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 export default function Join() {
     // حالة لتخزين نوع الحساب المختار: 'user' أو 'store'
     const [accountType, setAccountType] = useState('');
     const navigate = useNavigate();
-
+    const { isAuthenticated } = useContext(AuthContext)
     const handleContinue = () => {
         // توجيه المستخدم بناءً على اختياره
         if (accountType === 'user') {
             navigate('/auth/register'); // عدل المسار حسب الرابط في مشروعك
-        } else if (accountType === 'store') {
+        } else if (accountType === 'store' && isAuthenticated) {
             navigate('/auth/store'); // عدل المسار حسب الرابط في مشروعك
+        } else {
+
+            toast.error('يجب أن تسجل دخولك أولاً')
+            navigate('/auth/login'); // عدل المسار حسب الرابط في مشروعك
         }
     };
 
@@ -26,8 +32,8 @@ export default function Join() {
                     type="button"
                     onClick={() => setAccountType('user')}
                     className={`w-full p-4 rounded-xl border-2 text-right transition-all flex items-center gap-4 outline-none ${accountType === 'user'
-                            ? 'border-moda-purple bg-purple-50/50'
-                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                        ? 'border-moda-purple bg-purple-50/50'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
                         }`}
                 >
                     <div className={`p-3 rounded-full transition-colors ${accountType === 'user' ? 'bg-moda-purple text-white' : 'bg-gray-100 text-gray-500'
@@ -50,8 +56,8 @@ export default function Join() {
                     type="button"
                     onClick={() => setAccountType('store')}
                     className={`w-full p-4 rounded-xl border-2 text-right transition-all flex items-center gap-4 outline-none ${accountType === 'store'
-                            ? 'border-moda-purple bg-purple-50/50'
-                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                        ? 'border-moda-purple bg-purple-50/50'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
                         }`}
                 >
                     <div className={`p-3 rounded-full transition-colors ${accountType === 'store' ? 'bg-moda-purple text-white' : 'bg-gray-100 text-gray-500'
@@ -66,6 +72,7 @@ export default function Join() {
                             حساب متجر
                         </h3>
                         <p className="text-sm text-gray-500 mt-1">افتح متجرك الخاص وابدأ ببيع منتجاتك للعملاء.</p>
+                        <p className="text-sm text-red-800 mt-1">يجب أن يكون لديك حساب مستخدم أولاً ومسجل دخول به</p>
                     </div>
                 </button>
             </div>
@@ -75,8 +82,8 @@ export default function Join() {
                 onClick={handleContinue}
                 disabled={!accountType}
                 className={`w-full py-3.5 rounded-xl font-bold transition-all shadow-md mt-4 ${!accountType
-                        ? 'bg-gray-300 cursor-not-allowed text-gray-500'
-                        : 'bg-moda-purple hover:bg-moda-purpleHover text-white hover:shadow-lg active:scale-[0.98]'
+                    ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                    : 'bg-moda-purple hover:bg-moda-purpleHover text-white hover:shadow-lg active:scale-[0.98]'
                     }`}
             >
                 متابعة

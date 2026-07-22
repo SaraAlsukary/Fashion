@@ -24,32 +24,49 @@ export const useAuth = () => {
         throw new Error('useAuth must be used within an AuthProvider');
     }
     // 1️⃣ دالة تسجيل الدخول (Login)
-    // 1️⃣ دالة تسجيل الدخول (Login)
-    const loginMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
-        mutationFn: async (credentials) => {
-            const { data } = await api.post('/Auth/Login', credentials);
-            console.log(data.data)
-            return data;
-        },
-        onSuccess: (data) => {
-            toast.success("تم تسجيل الدخول");
-            console.log(data);
+const loginMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
+    mutationFn: async (credentials) => {
+        const { data } = await api.post('/Auth/Login', credentials);
+        return data;
+    },
+    onSuccess: (data) => {
+        toast.success("تم تسجيل الدخول بنجاح");
+        
+        // استخراج البيانات من الاستجابة
+        const token = data.data.jwtAuthResult.accessToken;
+        const refreshToken = data.data.jwtAuthResult.refreshToken.refreshTokenString;
+        const roles = data.data.getRoles; 
 
-            // 💡 1. استخدام المسار الصحيح للتوكن بناءً على استجابة الـ API
-            const token = data.data.jwtAuthResult.accessToken;
-            const roles = data.data.getRoles;
+        // حفظ التوكن في الـ LocalStorage
+        localStorage.setItem('token', token);
+        localStorage.setItem('refreshToken', refreshToken);
 
-            // حفظ التوكن في الـ LocalStorage
-            localStorage.setItem('token', token);
-            localStorage.setItem('refreshToken', data.data.jwtAuthResult.refreshToken.refreshTokenString);
-            // 💡 2. تحديث حالة المستخدم في الـ Context فوراً حتى تتغير حالة الواجهة
-            // قمنا بتمرير التوكن والصلاحيات، ويمكنك تعديلها بناءً على ما يحتاجه تطبيقك
-            context.setUser({ token, roles, isAuthenticated: true });
+        // تحويل مصفوفة الكائنات إلى مصفوفة نصوص لتسهيل الفحص 
+        // النتيجة ستكون مثلاً: ["User", "SuperAdmin"]
+        const roleNames = roles.map((role: { name: string }) => role.name);
 
-            // التوجيه للصفحة الرئيسية بعد النجاح
-            navigate('/');
+        // تحديث حالة المستخدم في الـ Context
+        context.setUser({ token, roles: roleNames, isAuthenticated: true });
+
+        // 💡 فحص الأدوار والتوجيه بناءً عليها
+        if (roleNames.includes('SuperAdmin')) {
+            // توجيه السوبر أدمن
+            navigate('/super-admin'); 
+        } 
+        else if (roleNames.includes('Admin')) {
+            // توجيه الأدمن العادي
+            navigate('/admin'); 
+        } 
+        else {
+            // التوجيه الافتراضي للمستخدم العادي
+            navigate('/'); 
         }
-    });
+    },
+    onError: (err) => {
+        toast.error("حدث خطأ أثناء تسجيل الدخول");
+        console.error(err);
+    }
+});
 
     // 2️⃣ دالة إنشاء حساب جديد (Register)
     const registerMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({

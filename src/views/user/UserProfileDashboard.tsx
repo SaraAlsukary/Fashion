@@ -4,10 +4,13 @@ import { useAllOrders, useCancelOrder, useOrderItems } from '../../hooks/useOrde
 import { useUpdateProfilePhoto, useUserProfile } from '../../hooks/useUser'; 
 import { useWallet } from '../../hooks/useWallet'; 
 import { useAllTransactions } from '../../hooks/useTransaction'; 
+// 👇 تمت إضافة هوكس المتاجر
+import { useGetAllRequestStoreByUser, useStore } from '../../hooks/useStore'; 
 import toast from 'react-hot-toast';
 
 export default function UserProfileDashboard() {
-    const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wallet'>('profile');
+    // 👇 تمت إضافة 'storeRequests'
+    const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wallet' | 'storeRequests'>('profile');
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
     // استدعاء الهوكس
@@ -23,6 +26,13 @@ export default function UserProfileDashboard() {
 
     const { data: wallet, isLoading: walletLoading } = useWallet();
     const { data: transactions } = useAllTransactions();
+
+    // ---------------------------------
+    // 👇 هوكس طلبات المتاجر
+    // ---------------------------------
+    const { data: storeRequestsRes, isLoading: requestsLoading } = useGetAllRequestStoreByUser();
+    const { cancelStoreRequest, isCancelingRequest } = useStore(); 
+    const storeRequests = storeRequestsRes?.data || [];
 
     // معالجة رفع الصورة الشخصية
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,6 +62,13 @@ export default function UserProfileDashboard() {
         }
     };
 
+    // 👇 معالجة إلغاء طلب فتح المتجر
+    const handleCancelStoreRequest = (requestId: number) => {
+        if (confirm('هل أنت متأكد من رغبتك في التراجع وإلغاء طلب فتح المتجر؟')) {
+            cancelStoreRequest(requestId);
+        }
+    };
+
     return (
         <div className="max-w-6xl mx-auto p-4 md:p-6 min-h-screen bg-gray-50/50" dir="rtl">
             <h1 className="text-2xl font-black text-gray-900 mb-6">لوحة التحكم الخاصة بي</h1>
@@ -76,6 +93,13 @@ export default function UserProfileDashboard() {
                         className={`w-full text-right px-4 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-3 ${activeTab === 'wallet' ? 'bg-amber-50 text-amber-600' : 'text-gray-600 hover:bg-gray-50'}`}
                     >
                         💰 محفظتي الإلكترونية
+                    </button>
+                    {/* 👇 التبويب الجديد */}
+                    <button
+                        onClick={() => setActiveTab('storeRequests')}
+                        className={`w-full text-right px-4 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-3 ${activeTab === 'storeRequests' ? 'bg-amber-50 text-amber-600' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                        🏪 طلبات فتح متجر
                     </button>
                 </div>
 
@@ -223,6 +247,75 @@ export default function UserProfileDashboard() {
                                             <p className="text-xs text-gray-400">لا توجد حركات مالية مسجلة بعد.</p>
                                         )}
                                     </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* 4️⃣ التبويب الجديد: طلبات الإنضمام كتاجر 👇 */}
+                    {activeTab === 'storeRequests' && (
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900 mb-4">طلبات الانضمام كصاحب متجر</h2>
+                            
+                            {requestsLoading ? (
+                                <p className="text-sm text-gray-500">جاري تحميل الطلبات... ⏳</p>
+                            ) : storeRequests && storeRequests.length > 0 ? (
+                                <div className="space-y-4">
+                                    {storeRequests.map((req: any) => (
+                                        <div key={req.id} className="border border-gray-100 rounded-xl p-4 hover:border-amber-200 transition-colors bg-white">
+                                            <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
+                                                <div>
+                                                    <span className="text-xs font-bold bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
+                                                        طلب رقم #{req.id}
+                                                    </span>
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        {req.createdAt ? new Date(req.createdAt).toLocaleDateString('ar-EG') : 'تاريخ غير متاح'}
+                                                    </p>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-3">
+                                                    {/* حالة الطلب */}
+                                                    <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${
+                                                        req.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' : 
+                                                        req.status === 'Approved' ? 'bg-green-50 text-green-600' : 
+                                                        req.status === 'Rejected' ? 'bg-red-50 text-red-600' : 
+                                                        'bg-gray-100 text-gray-600'
+                                                    }`}>
+                                                        {req.status === 'Pending' ? 'قيد الانتظار' : 
+                                                         req.status === 'Approved' ? 'تمت الموافقة ✅' : 
+                                                         req.status === 'Rejected' ? 'مرفوض ❌' : 
+                                                         req.status === 'Cancelled' ? 'ملغي' : req.status}
+                                                    </span>
+
+                                                    {/* زر الإلغاء يظهر فقط في حالة قيد الانتظار */}
+                                                    {req.status === 'Pending' && (
+                                                        <button
+                                                            onClick={() => handleCancelStoreRequest(req.id)}
+                                                            disabled={isCancelingRequest}
+                                                            className="text-xs text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg font-bold disabled:opacity-50"
+                                                        >
+                                                            {isCancelingRequest ? 'جاري الإلغاء...' : 'إلغاء الطلب'}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100 text-sm flex flex-col gap-1">
+                                                <p className="text-gray-700 font-bold">
+                                                    اسم المتجر: <span className="font-normal text-amber-600">{req.storeName || 'غير متوفر'}</span>
+                                                </p>
+                                                {req.description && (
+                                                    <p className="text-gray-600 text-xs mt-1 leading-relaxed">
+                                                        <span className="font-bold">الوصف:</span> {req.description}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-10 bg-gray-50 border border-dashed border-gray-200 rounded-2xl">
+                                    <p className="text-sm text-gray-500">ليس لديك أي طلبات انضمام كتاجر حتى الآن.</p>
                                 </div>
                             )}
                         </div>

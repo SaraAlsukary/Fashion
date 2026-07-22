@@ -1,5 +1,6 @@
 import { useContext, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+// 1. إضافة NavLink هنا
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useGetCartItems } from '../../hooks/useCart';
 import { useUserProfile } from '../../hooks/useUser';
@@ -7,26 +8,19 @@ import { useUserProfile } from '../../hooks/useUser';
 const Header = () => {
     const { isAuthenticated, logout } = useContext(AuthContext);
     const { data: cartResponse } = useGetCartItems();
-    const { data: user, isLoading: userLoading } = useUserProfile();
-
+    const { data: user, isLoading: userLoading } = useUserProfile(); 
+    
     const navigate = useNavigate();
 
     const cartItemsCount = isAuthenticated ? (cartResponse?.data?.cartItemDto?.length || 0) : 0;
 
-    // 1️⃣ حالة (State) لحفظ نص البحث
     const [searchQuery, setSearchQuery] = useState('');
 
-    // 2️⃣ دالة تنفيذ البحث وتوجيه المستخدم
     const handleSearch = (e?: React.KeyboardEvent | React.MouseEvent) => {
-        // إذا كان الحدث من لوحة المفاتيح ولم يكن زر Enter، لا تفعل شيئاً
         if (e && 'key' in e && e.key !== 'Enter') return;
 
-        // التأكد من أن حقل البحث ليس فارغاً
         if (searchQuery.trim()) {
-            // توجيه المستخدم لصفحة نتائج البحث وتمرير الكلمة في الرابط
             navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-            // اختياري: تفريغ الحقل بعد البحث
-            // setSearchQuery(''); 
         }
     };
 
@@ -40,23 +34,42 @@ const Header = () => {
                         موضة<span className="text-moda-gold">.</span>
                     </h1>
                     <nav className="hidden md:flex items-center gap-8 font-medium text-gray-600">
-                        <Link to={'/'} className="text-moda-purple border-b-2 border-moda-purple pb-1">الرئيسية</Link>
-                        <Link to={'/stores'} className="hover:text-moda-purple hover:-translate-y-1 transition-all duration-300">المتاجر</Link>
+                        {/* 2. استخدام NavLink لتفعيل الروابط */}
+                        <NavLink 
+                            to="/" 
+                            className={({ isActive }) => 
+                                isActive 
+                                ? "text-moda-purple border-b-2 border-moda-purple pb-1" 
+                                : "hover:text-moda-purple hover:-translate-y-1 transition-all duration-300 pb-1"
+                            }
+                        >
+                            الرئيسية
+                        </NavLink>
+                        
+                        <NavLink 
+                            to="/stores" 
+                            className={({ isActive }) => 
+                                isActive 
+                                ? "text-moda-purple border-b-2 border-moda-purple pb-1" 
+                                : "hover:text-moda-purple hover:-translate-y-1 transition-all duration-300 pb-1"
+                            }
+                        >
+                            المتاجر
+                        </NavLink>
                     </nav>
                 </div>
 
-                {/* شريط البحث المحدث */}
+                {/* شريط البحث */}
                 <div className="hidden lg:flex flex-1 max-w-md mx-8 group">
                     <div className="relative w-full transition-transform duration-300 group-focus-within:scale-[1.02]">
                         <input
                             type="text"
-                            value={searchQuery} // ربط الحقل بالحالة
-                            onChange={(e) => setSearchQuery(e.target.value)} // تحديث الحالة عند الكتابة
-                            onKeyDown={handleSearch} // الاستماع لزر Enter
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={handleSearch}
                             placeholder="ابحث عن متاجر، أزياء، أو مصممين..."
                             className="w-full bg-gray-50 border border-gray-200 rounded-full py-2.5 px-5 pr-11 text-sm focus:outline-none focus:border-moda-purple focus:bg-white focus:shadow-md transition-all duration-300"
                         />
-                        {/* جعل الأيقونة قابلة للنقر لتنفيذ البحث أيضاً */}
                         <span
                             onClick={handleSearch}
                             className="absolute left-4 top-3 text-gray-400 cursor-pointer hover:text-moda-purple transition-colors duration-300"
@@ -82,7 +95,7 @@ const Header = () => {
                     <div className="h-8 w-[1px] bg-gray-200 hidden sm:block"></div>
 
                     {/* التحقق من حالة تسجيل الدخول */}
-                    {userLoading ? "جاري تحميل بيانات المستخدم..." : isAuthenticated ? (
+                    {userLoading ? "جاري التحميل ..." : isAuthenticated ? (
                         <div className="flex items-center gap-3">
                             <button className="p-2.5 hover:bg-gray-100 rounded-full transition-all duration-300 hover:rotate-12 hover:scale-110" title="الإشعارات">
                                 <span className="text-xl">🔔</span>
@@ -93,13 +106,13 @@ const Header = () => {
                                 <span onClick={() => navigate('/my-profile')} className="text-sm font-bold text-gray-700 hidden sm:block truncate max-w-[100px] cursor-pointer hover:text-moda-purple transition-colors">
                                     {user?.firstName || 'مستخدم'}
                                 </span>
-
+                                
                                 {/* عرض صورة المستخدم أو أول حرف من اسمه */}
                                 <div onClick={() => navigate('/my-profile')} className="w-8 h-8 rounded-full flex items-center justify-center font-bold cursor-pointer overflow-hidden border border-moda-purple/30 bg-white">
                                     {user?.profilePhoto || localStorage.getItem('userPhoto') ? (
-                                        <img
-                                            src={user?.profilePhoto ? `http://www.marketexpress.somee.com/${user?.profilePhoto}` : localStorage.getItem('userPhoto')!}
-                                            alt={user?.firstName || 'User Profile'}
+                                        <img 
+                                            src={user?.profilePhoto ? `http://www.marketexpress.somee.com/${user?.profilePhoto}` : localStorage.getItem('userPhoto')!} 
+                                            alt={user?.firstName || 'User Profile'} 
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
@@ -108,7 +121,7 @@ const Header = () => {
                                         </span>
                                     )}
                                 </div>
-
+                                
                                 <div className="h-4 w-[1px] bg-gray-300"></div>
                                 <button
                                     onClick={logout}
