@@ -272,8 +272,7 @@ export default function UserProfileDashboard() {
                                 <h2 className="text-lg font-bold text-gray-900">طلبات الانضمام كصاحب متجر</h2>
                                 <button
                                     onClick={() => {
-                                        // يمكنك هنا إضافة الدالة التي تفتح المودال (النافذة المنبثقة) أو توجه المستخدم لصفحة الطلب
-                                        console.log('فتح نافذة تقديم طلب متجر جديد...');
+                                        navigate('/auth/join')
                                     }}
                                     className="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2"
                                 >
@@ -300,9 +299,9 @@ export default function UserProfileDashboard() {
                                                 <div className="flex items-center gap-3">
                                                     {/* حالة الطلب */}
                                                     <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${req.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
-                                                            req.status === 'Approved' ? 'bg-green-50 text-green-600' :
-                                                                req.status === 'Rejected' ? 'bg-red-50 text-red-600' :
-                                                                    'bg-gray-100 text-gray-600'
+                                                        req.status === 'Approved' ? 'bg-green-50 text-green-600' :
+                                                            req.status === 'Rejected' ? 'bg-red-50 text-red-600' :
+                                                                'bg-gray-100 text-gray-600'
                                                         }`}>
                                                         {req.status === 'Pending' ? 'قيد الانتظار' :
                                                             req.status === 'Approved' ? 'تمت الموافقة ✅' :

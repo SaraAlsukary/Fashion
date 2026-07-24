@@ -88,12 +88,17 @@ export const useAddSizesForProduct = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ productColorId, sizesData }: { productColorId: number, sizesData: any }) => {
-            // 💡 التعديل هنا: دمج productColorId مباشرة في مسار الـ URL
-            const { data } = await api.post(`ClothingItem/AddSizesforProduct/${productColorId}`, sizesData);
+            // ✅ الكود الصحيح: إرسال الـ ID كـ Query Parameter
+            const { data } = await api.post(
+                `ClothingItem/AddSizesforProduct`, 
+                sizesData, 
+                {
+                    params: { productColorId }
+                }
+            );
             return data;
         },
         onSuccess: () => {
-            // 💡 تحديث كويري clothingItems لإعادة جلب البيانات وتحديث الجدول فوراً
             queryClient.invalidateQueries({ queryKey: ['clothingItems'] });
         },
     });

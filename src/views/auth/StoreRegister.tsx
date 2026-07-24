@@ -106,7 +106,7 @@ export default function RegisterStore() {
             if (data && data.length > 0) {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
-
+                console.log({ lat, lon })
                 setMapCenter([lat, lon]);
                 setFormData(prev => ({
                     ...prev,
@@ -416,7 +416,7 @@ export default function RegisterStore() {
                         تسجيل الدخول
                     </Link>
                 </p>
-    
+
             </form>
         </div>
     );

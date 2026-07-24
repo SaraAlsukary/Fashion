@@ -65,11 +65,12 @@ const AttributesPage = () => {
 
     const sizeData = {
       size: sizeName,
-      stockQuantity: sizeQuantity // الـ API لا يعيد الكمية في الـ GET لكن قد يطلبها في الـ POST
+      stockQuantity: sizeQuantity
     };
 
     addSizeMutation.mutate(
-      { productColorId: selectedColorItem.id, sizesData: sizeData },
+      // ✅ أرسل sizeData بداخل مصفوفة [ ]
+      { productColorId: selectedColorItem.id, sizesData: [sizeData] },
       {
         onSuccess: () => {
           setIsAddSizeModalOpen(false);
@@ -125,8 +126,8 @@ const AttributesPage = () => {
                     key={item.id}
                     onClick={() => setSelectedColorItem(item)}
                     className={`cursor-pointer border-2 rounded-xl p-3 flex flex-col items-center transition-all ${selectedColorItem?.id === item.id
-                        ? 'border-blue-600 bg-blue-50 shadow-md transform scale-105'
-                        : 'border-gray-200 hover:border-blue-300'
+                      ? 'border-blue-600 bg-blue-50 shadow-md transform scale-105'
+                      : 'border-gray-200 hover:border-blue-300'
                       }`}
                   >
                     {/* تم تعديل رابط الصورة ليقرأ من Cloudinary مباشرة كما يأتي من الـ API */}
@@ -184,8 +185,8 @@ const AttributesPage = () => {
                         <td className="p-4 border-b font-bold text-gray-800">{size.size}</td>
                         <td className="p-4 border-b">
                           <span className={`px-3 py-1 rounded-full font-medium text-sm ${size.isFoundProduct
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-red-100 text-red-800'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-red-100 text-red-800'
                             }`}>
                             {size.isFoundProduct ? 'متوفر' : 'غير متوفر'}
                           </span>
@@ -282,14 +283,21 @@ const AttributesPage = () => {
             </div>
             <form onSubmit={handleAddSize} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">المقاس (Shoe38, Shoe39...)</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-1">المقاس</label>
+                <select
                   required
                   value={sizeName}
-                  onChange={(e) => setSizeName(e.target.value)}
+                  onChange={(e) => setSizeName(e.target.value)} // استخدم Number(e.target.value) إذا كان الـ Backend يتوقع رقماً
                   className="w-full p-2 border rounded-lg focus:ring-emerald-500"
-                />
+                >
+                  <option value="" disabled>-- اختر المقاس --</option>
+                  {/* يجب استبدال هذه القيم بالقيم الحقيقية الموجودة في الـ Enum الخاص بالـ Backend */}
+                  <option value="1">Small</option>
+                  <option value="2">Medium</option>
+                  <option value="3">Large</option>
+                  <option value="38">Shoe38</option>
+                  <option value="39">Shoe39</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">الكمية المتوفرة في المخزن</label>
