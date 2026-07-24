@@ -84,18 +84,17 @@ export const useUpdateColorDetails = () => {
     });
 };
 
-// إضافة مقاسات للون معين (JSON Body)
 export const useAddSizesForProduct = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ productColorId, sizesData }: { productColorId: number, sizesData: any }) => {
-            const { data } = await api.post(`ClothingItem/AddSizesforProduct`, sizesData, {
-                params: { productColorId },
-            });
+            // 💡 التعديل هنا: دمج productColorId مباشرة في مسار الـ URL
+            const { data } = await api.post(`ClothingItem/AddSizesforProduct/${productColorId}`, sizesData);
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['sizes'] });
+            // 💡 تحديث كويري clothingItems لإعادة جلب البيانات وتحديث الجدول فوراً
+            queryClient.invalidateQueries({ queryKey: ['clothingItems'] });
         },
     });
 };

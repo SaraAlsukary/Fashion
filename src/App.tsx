@@ -46,6 +46,7 @@ const StoreSettingsPage = lazy(() => import('./views/admin/StoreSettingsPage'));
 const AttributesPage = lazy(() => import('./views/admin/AttributesPage'));
 const CategoriesPage = lazy(() => import('./views/admin/CategoriesPage'));
 const ProductFormPage = lazy(() => import('./views/admin/ProductFormPage'));
+const ProductEditPage = lazy(() => import('./views/admin/ProductEditPage'));
 const ProductsPage = lazy(() => import('./views/admin/ProductsPage'));
 
 
@@ -201,7 +202,7 @@ const router = createBrowserRouter([
         },
         {
           path: "edit/:id",
-          element: <Suspense fallback={<Loading />}><ProductFormPage /></Suspense>
+          element: <Suspense fallback={<Loading />}><ProductEditPage /></Suspense>
         }
       ]
     }
