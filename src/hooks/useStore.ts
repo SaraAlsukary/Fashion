@@ -146,14 +146,23 @@ export const useStore = () => {
 
     const updateStoreMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
         mutationFn: async (storeData) => {
-            const { data } = await api.patch('/Store/UpdateStore', storeData);
+            // 👇 لاحظ أننا نستخدم الرابط النسبي /api مباشرة، وVite سيتكفل بتحويله للخادم الخارجي سراً
+            const { data } = await api.patch('/Store/UpdateStore', storeData, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    // لا تضع 'Content-Type': 'multipart/form-data' هنا
+                }
+            });
             return data;
         },
         onSuccess: () => {
             toast.success("تم تحديث المتجر بنجاح");
-            // تحديث قوائم المتاجر تلقائياً
             queryClient.invalidateQueries({ queryKey: ['allStores'] });
             queryClient.invalidateQueries({ queryKey: ['adminStores'] });
+        },
+        onError: (err) => {
+            toast.error("حدث خطأ أثناء التحديث");
+            console.log(err);
         }
     });
 
