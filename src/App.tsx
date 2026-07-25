@@ -5,6 +5,7 @@ import MainLayout from "./components/layouts/MainLayout";
 import AuthLayout from './components/layouts/AuthLayout';
 import Loading from './components/templates/Loading';
 import StoreOwnerLayout from './components/layouts/StoreOwnerLayout';
+import TransferAgentLayout from './components/layouts/TransferAgentLayout';
 
 
 // 1. استدعاء الصفحات والمخططات بنظام التحميل الكسول (Lazy Loading)
@@ -51,6 +52,12 @@ const ProductsPage = lazy(() => import('./views/admin/ProductsPage'));
 
 
 
+// Transfer Agent
+const TransferAgentDashboard = lazy(() => import('./views/transferAgent/TransferAgentDashboard'));
+const NewTransfer = lazy(() => import('./views/transferAgent/NewTransaction'));
+const TransactionHistory = lazy(() => import('./views/transferAgent/TransactionHistory'));
+const WalletSettings = lazy(() => import('./views/transferAgent/WalletSettings'));
+const MyProfile = lazy(() => import('./views/shared/MyProfile'));
 
 
 // 2. إعداد الراوتر الرئيسي للموقع
@@ -148,6 +155,10 @@ const router = createBrowserRouter([
         element: <Suspense fallback={<Loading />}><DashboardPage /></Suspense>
       },
       {
+        path: "profile",
+        element: <Suspense fallback={<Loading />}><MyProfile /></Suspense>
+      },
+      {
         path: "requests",
         element: <Suspense fallback={<Loading />}><StoreRequestsPage /></Suspense>
       },
@@ -170,44 +181,73 @@ const router = createBrowserRouter([
     ]
   },
   {
-  path: "/admin",
-  element: <Suspense fallback={<Loading />}><StoreOwnerLayout /></Suspense>,
-  children: [
-    {
-      index: true,
-      element: <Suspense fallback={<Loading />}><Dashboard /></Suspense>
-    },
-    {
-      path: "settings",
-      element: <Suspense fallback={<Loading />}><StoreSettingsPage /></Suspense>
-    },
-    {
-      path: "attributes",
-      element: <Suspense fallback={<Loading />}><AttributesPage /></Suspense>
-    },
-    {
-      path: "categories",
-      element: <Suspense fallback={<Loading />}><CategoriesPage /></Suspense>
-    },
-    {
-      path: "products",
-      children: [
-        {
-          index: true,
-          element: <Suspense fallback={<Loading />}><ProductsPage /></Suspense>
-        },
-        {
-          path: "add",
-          element: <Suspense fallback={<Loading />}><ProductFormPage /></Suspense>
-        },
-        {
-          path: "edit/:id",
-          element: <Suspense fallback={<Loading />}><ProductEditPage /></Suspense>
-        }
-      ]
-    }
-  ]
-}
+    path: "/admin",
+    element: <Suspense fallback={<Loading />}><StoreOwnerLayout /></Suspense>,
+    children: [
+      {
+        index: true,
+        element: <Suspense fallback={<Loading />}><Dashboard /></Suspense>
+      },
+      {
+        path: "settings",
+        element: <Suspense fallback={<Loading />}><StoreSettingsPage /></Suspense>
+      },
+      {
+        path: "attributes",
+        element: <Suspense fallback={<Loading />}><AttributesPage /></Suspense>
+      },
+      {
+        path: "categories",
+        element: <Suspense fallback={<Loading />}><CategoriesPage /></Suspense>
+      },
+      {
+        path: "products",
+        children: [
+          {
+            index: true,
+            element: <Suspense fallback={<Loading />}><ProductsPage /></Suspense>
+          },
+          {
+            path: "add",
+            element: <Suspense fallback={<Loading />}><ProductFormPage /></Suspense>
+          },
+          {
+            path: "edit/:id",
+            element: <Suspense fallback={<Loading />}><ProductEditPage /></Suspense>
+          }
+        ]
+      }
+
+    ]
+  },
+
+  {
+    path: "/transfer-agent",
+    element: <Suspense fallback={<Loading />}><TransferAgentLayout /></Suspense>,
+    children: [
+      {
+        index: true,
+        element: <Suspense fallback={<Loading />}><TransferAgentDashboard /></Suspense>
+      },
+      {
+        path: "new",
+        element: <Suspense fallback={<Loading />}><NewTransfer /></Suspense>
+      },
+      {
+        path: "history",
+        element: <Suspense fallback={<Loading />}><TransactionHistory /></Suspense>
+      },
+      {
+        path: "wallet-settings",
+        element: <Suspense fallback={<Loading />}><WalletSettings /></Suspense>
+      },
+      {
+        // مسار الملف الشخصي الجديد 👈
+        path: "profile",
+        element: <Suspense fallback={<Loading />}><MyProfile /></Suspense>
+      }
+    ]
+  }
 ]);
 
 // 3. المكون الأساسي للتطبيق

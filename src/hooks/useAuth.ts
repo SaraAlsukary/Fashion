@@ -24,50 +24,52 @@ export const useAuth = () => {
         throw new Error('useAuth must be used within an AuthProvider');
     }
     // 1️⃣ دالة تسجيل الدخول (Login)
-const loginMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
-    mutationFn: async (credentials) => {
-        const { data } = await api.post('/Auth/Login', credentials);
-        return data;
-    },
-    onSuccess: (data) => {
-        toast.success("تم تسجيل الدخول بنجاح");
-        
-        // استخراج البيانات من الاستجابة
-        const token = data.data.jwtAuthResult.accessToken;
-        const refreshToken = data.data.jwtAuthResult.refreshToken.refreshTokenString;
-        const roles = data.data.getRoles; 
+    const loginMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
+        mutationFn: async (credentials) => {
+            const { data } = await api.post('/Auth/Login', credentials);
+            return data;
+        },
+        onSuccess: (data) => {
+            toast.success("تم تسجيل الدخول بنجاح");
 
-        // حفظ التوكن في الـ LocalStorage
-        localStorage.setItem('token', token);
-        localStorage.setItem('refreshToken', refreshToken);
+            // استخراج البيانات من الاستجابة
+            const token = data.data.jwtAuthResult.accessToken;
+            const refreshToken = data.data.jwtAuthResult.refreshToken.refreshTokenString;
+            const roles = data.data.getRoles;
 
-        // تحويل مصفوفة الكائنات إلى مصفوفة نصوص لتسهيل الفحص 
-        // النتيجة ستكون مثلاً: ["User", "SuperAdmin"]
-        const roleNames = roles.map((role: { name: string }) => role.name);
-        localStorage.setItem('roleNames', JSON.stringify(roleNames));
+            // حفظ التوكن في الـ LocalStorage
+            localStorage.setItem('token', token);
+            localStorage.setItem('refreshToken', refreshToken);
 
-        // تحديث حالة المستخدم في الـ Context
-        context.setUser({ token, roles: roleNames, isAuthenticated: true });
+            // تحويل مصفوفة الكائنات إلى مصفوفة نصوص لتسهيل الفحص 
+            // النتيجة ستكون مثلاً: ["User", "SuperAdmin"]
+            const roleNames = roles.map((role: { name: string }) => role.name);
+            localStorage.setItem('roleNames', JSON.stringify(roleNames));
 
-        // 💡 فحص الأدوار والتوجيه بناءً عليها
-        if (roleNames.includes('SuperAdmin')) {
-            // توجيه السوبر أدمن
-            navigate('/super-admin'); 
-        } 
-        else if (roleNames.includes('Admin')) {
-            // توجيه الأدمن العادي
-            navigate('/admin'); 
-        } 
-        else {
-            // التوجيه الافتراضي للمستخدم العادي
-            navigate('/'); 
+            // تحديث حالة المستخدم في الـ Context
+            context.setUser({ token, roles: roleNames, isAuthenticated: true });
+
+            // 💡 فحص الأدوار والتوجيه بناءً عليها
+            if (roleNames.includes('SuperAdmin')) {
+                // توجيه السوبر أدمن
+                navigate('/super-admin');
+            }
+            else if (roleNames.includes('Admin')) {
+                // توجيه الأدمن العادي
+                navigate('/admin');
+            } else if (roleNames.includes('EmployeeOfPayment')) {
+                navigate('/transfer-agent');
+            }
+            else {
+                // التوجيه الافتراضي للمستخدم العادي
+                navigate('/');
+            }
+        },
+        onError: (err) => {
+            toast.error("حدث خطأ أثناء تسجيل الدخول");
+            console.error(err);
         }
-    },
-    onError: (err) => {
-        toast.error("حدث خطأ أثناء تسجيل الدخول");
-        console.error(err);
-    }
-});
+    });
 
     // 2️⃣ دالة إنشاء حساب جديد (Register)
     const registerMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
@@ -77,7 +79,7 @@ const loginMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
         },
         onSuccess: (userData) => {
             toast.success(" يرجى تأكيد الحساب حتى تكتمل عملية انشاء الحساب")
-            
+
             // التوجيه لصفحة تأكيد البريد الإلكتروني بعد إنشاء الحساب بنجاح
             navigate('/auth/confirm-email', { state: { email: userData.email } });
         }
@@ -120,7 +122,7 @@ const loginMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
         // المعامل الأول (data) هو رد السيرفر، المعامل الثاني (variables) هو ما أرسلته للدالة
         onSuccess: (_, variables) => {
             toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
-            
+
             // 💡 الحل هنا: نأخذ الإيميل من variables وليس من رد السيرفر
             navigate('/auth/reset-password', { state: { email: variables.email } });
         }
