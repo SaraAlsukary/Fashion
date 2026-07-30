@@ -19,6 +19,41 @@ export const useGetClothingItems = (productId: number) => {
     });
 };
 
+
+// أضف هذا في نهاية ملف الـ Hooks
+export const useDeleteProductSize = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (productSizeId: number) => {
+            // استدعاء رابط الحذف وتمرير الـ ID في المسار (Path)
+            const { data } = await api.delete(`ClothingItem/DeleteProductSize/${productSizeId}`);
+            return data;
+        },
+        onSuccess: () => {
+            // تحديث المقاسات فوراً بعد الحذف
+            queryClient.invalidateQueries({ queryKey: ['sizes'] });
+        },
+    });
+};
+
+// حذف لون معين بالـ ID
+export const useDeleteProductColor = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ productColorId }: { productColorId: number; productId?: number }) => {
+            const { data } = await api.delete(`ClothingItem/DeleteProductColor/${productColorId}`);
+            return data;
+        },
+        onSuccess: (_, variables) => {
+            // تحديث قائمة الألوان فوراً بعد الحذف
+            if (variables.productId) {
+                queryClient.invalidateQueries({ queryKey: ['clothingItems', variables.productId] });
+            } else {
+                queryClient.invalidateQueries({ queryKey: ['clothingItems'] });
+            }
+        },
+    });
+};
 // جلب تفاصيل لون (ClothingItem) واحد
 export const useGetClothingItem = (clothingItemId: number) => {
     return useQuery({

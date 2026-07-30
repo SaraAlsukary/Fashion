@@ -19,7 +19,6 @@ const ResetPassword = lazy(() => import("./views/auth/ResetPassword"));
 const AllStores = lazy(() => import("./views/store/AllStores"));
 const StoreDetails = lazy(() => import("./views/store/StoreDetails"));
 const ProductDetails = lazy(() => import("./views/store/ProductDetails"));
-const UserProfileDashboard = lazy(() => import("./views/user/UserProfileDashboard"));
 const Cart = lazy(() => import("./views/store/Cart"));
 const NotFound = lazy(() => import('./views/NotFound'));
 const SearchPage = lazy(() => import('./views/store/SearchPage'));
@@ -37,6 +36,12 @@ const CategoryPage = lazy(() => import('./views/superAdmin/Category'));
 
 
 
+// customer
+const UserProfileDashboard = lazy(() => import("./views/user/UserProfileDashboard"));
+const CheckoutPage = lazy(() => import("./views/user/CheckoutPage"));
+
+
+
 
 
 
@@ -49,6 +54,7 @@ const CategoriesPage = lazy(() => import('./views/admin/CategoriesPage'));
 const ProductFormPage = lazy(() => import('./views/admin/ProductFormPage'));
 const ProductEditPage = lazy(() => import('./views/admin/ProductEditPage'));
 const ProductsPage = lazy(() => import('./views/admin/ProductsPage'));
+const StoreComplaintsPage = lazy(() => import('./views/admin/StoreComplaintsPage'));
 
 
 
@@ -85,6 +91,9 @@ const router = createBrowserRouter([
       {
         path: "cart",
         element: <Suspense fallback={<Loading />}><Cart /></Suspense>
+      }, {
+        path: "checkout",
+        element: <Suspense fallback={<Loading />}><CheckoutPage /></Suspense>
       },
       {
         path: "my-profile",
@@ -199,6 +208,10 @@ const router = createBrowserRouter([
       {
         path: "categories",
         element: <Suspense fallback={<Loading />}><CategoriesPage /></Suspense>
+      },
+      {
+        path: "complaints",
+        element: <Suspense fallback={<Loading />}><StoreComplaintsPage /></Suspense>
       },
       {
         path: "products",

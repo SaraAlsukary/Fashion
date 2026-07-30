@@ -15,6 +15,8 @@ const StoreOwnerLayout = () => {
         { name: 'فئات المتجر', path: '/admin/categories' },
         { name: 'الألوان والمقاسات', path: '/admin/attributes' },
         { name: 'بيانات المتجر', path: '/admin/settings' },
+        // أضف هذا السطر داخل مصفوفة navLinks في StoreOwnerLayout
+        { name: 'شكاوى الزبائن', path: '/admin/complaints' },
     ];
 
     // إغلاق القائمة الجانبية تلقائياً عند تغيير الصفحة (للموبايل)

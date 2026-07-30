@@ -20,7 +20,7 @@ export default function ProductDetails() {
     const pId = productId ? parseInt(productId) : null;
     const sId = storeId ? parseInt(storeId) : null;
 
-  
+
     const { data: productsData, isLoading: isLoadingProducts } = useGetAllProductsByStore(sId);
     const { data: clothingResponse, isLoading: isLoadingClothing } = useProductDetailsStore(pId);
 
@@ -149,7 +149,11 @@ export default function ProductDetails() {
                                             onClick={() => handleColorChange(variant.id)}
                                             className={`w-12 h-12 rounded-xl overflow-hidden transition-all ${selectedVariantId === variant.id ? 'ring-2 ring-offset-2 ring-moda-purple scale-110 shadow-md' : 'opacity-70 border'}`}
                                         >
-                                            <img src={variant.image} alt={variant.color} className="w-full h-full object-cover" />
+                                            <img
+                                                src={variant?.image
+                                                    ? (variant.image.includes('https://res.cloudinary.com') ? variant.image : `http://www.marketexpress.somee.com/${variant.image}`)
+                                                    : '/placeholder-product.png'}
+                                                alt={variant.color} className="w-full h-full object-cover" />
                                         </button>
                                     ))}
                                 </div>

@@ -11,20 +11,21 @@ export default function ProductRatingSection({ productId }: ProductRatingSection
     const { data: userRatingData, isLoading: isLoadingRating, error: fetchError } = useProductRatingByUser(productId);
     const addRatingMutation = useAddRating();
 
-    // 🔍 تشخيص 1: طباعة البيانات القادمة من الـ API لمعرفة تركيبها
+    // استخراج قيمة التقييم كرقم سواء كان الرد كائناً يحتوي على ratingValue أو كان الرد رقماً مباشراً
+    const currentUserRating = userRatingData?.ratingValue ?? (typeof userRatingData === 'number' ? userRatingData : null);
+
     useEffect(() => {
         if (userRatingData) {
             console.log("=== تشخيص التقييم الحالي ===");
             console.log("البيانات الخام القادمة من الـ API:", userRatingData);
-            console.log("قيمة ratingValue المستخرجة:", userRatingData?.ratingValue);
+            console.log("التقييم المستخرج كـ رقم:", currentUserRating);
         }
         if (fetchError) {
             console.error("خطأ أثناء جلب التقييم الحالي:", fetchError);
         }
-    }, [userRatingData, fetchError]);
+    }, [userRatingData, fetchError, currentUserRating]);
 
-    const currentUserRating = userRatingData || null;
-
+    // تحديث النجوم محلياً عندما يأتي التقييم من السيرفر
     useEffect(() => {
         if (currentUserRating) {
             setRatingValue(currentUserRating);
@@ -35,10 +36,8 @@ export default function ProductRatingSection({ productId }: ProductRatingSection
         e.preventDefault();
         e.stopPropagation();
 
-        console.log("🚀 تم الضغط على زر الحفظ. المعطيات المرسلة:", { productId, ratingValue });
-
         if (!productId) {
-            console.warn("❌ تم إلغاء الإرسال لأن productId غير موجود أو غير معرف:", productId);
+            console.warn("❌ تم إلغاء الإرسال لأن productId غير موجود");
             return;
         }
 
@@ -47,7 +46,6 @@ export default function ProductRatingSection({ productId }: ProductRatingSection
             ratingValue: ratingValue,
         }, {
             onSuccess: (res: any) => {
-                // الفحص في حال كان الـ API يعيد كود 200 وبداخله فشل
                 if (res && res.success === false) {
                     console.error("❌ الـ API أعاد حالة فشل داخلية:", res);
                     toast.error(res.message || "فشل حفظ التقييم من السيرفر");
@@ -80,14 +78,12 @@ export default function ProductRatingSection({ productId }: ProductRatingSection
                         <button
                             key={star}
                             type="button"
-                            onClick={() => {
-                                console.log(`تغيير النجوم محلياً إلى: ${star}`);
-                                setRatingValue(star);
-                            }}
-                            className={`text-2xl transition-transform hover:scale-110 focus:outline-none ${star <= ratingValue
-                                ? 'text-yellow-400 drop-shadow-sm'
-                                : 'text-gray-300'
-                                }`}
+                            onClick={() => setRatingValue(star)}
+                            className={`text-2xl transition-transform hover:scale-110 focus:outline-none ${
+                                star <= ratingValue
+                                    ? 'text-yellow-400 drop-shadow-sm'
+                                    : 'text-gray-300'
+                            }`}
                         >
                             ★
                         </button>

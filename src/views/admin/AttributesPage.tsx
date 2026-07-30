@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import {
-  useGetClothingItems,
   useAddColorForProduct,
   useUpdateColorDetails,
   useGetSizesByColor,
   useAddSizesForProduct,
-  useUpdateSizeForProduct
+  useUpdateSizeForProduct,
+  useDeleteProductSize // 👈 1. استيراد هوك الحذف
 } from '../../hooks/useClothingItem';
 import { useGetProducts } from '../../hooks/useProduct';
 import { useGetStoresByAdmin } from '../../hooks/useStore';
+import ProductColorsManager from '../../components/admin/ProductColorsManager';
 
 const AVAILABLE_SIZES = [
   "XS", "S", "M", "L", "XL", "XXL",
@@ -44,14 +45,14 @@ const AttributesPage = () => {
   // --- جلب البيانات (Queries) ---
   const { data: store } = useGetStoresByAdmin();
   const { data: products } = useGetProducts(store?.id);
-  const { data: clothingItems, isLoading: isLoadingColors } = useGetClothingItems(Number(selectedProductId));
   const { data: sizes, isLoading: isLoadingSizes } = useGetSizesByColor(Number(selectedProductId), selectedColorItem?.color || '');
 
-  // --- الإضافة والتعديل (Mutations) ---
+  // --- الإضافة والتعديل والحذف (Mutations) ---
   const addColorMutation = useAddColorForProduct();
   const addSizeMutation = useAddSizesForProduct();
   const updateColorMutation = useUpdateColorDetails();
   const updateSizeMutation = useUpdateSizeForProduct();
+  const deleteSizeMutation = useDeleteProductSize(); // 👈 2. استدعاء هوك الحذف
 
   // ==========================================
   // دوال الإضافة
@@ -100,7 +101,7 @@ const AttributesPage = () => {
   };
 
   // ==========================================
-  // دوال التعديل
+  // دوال التعديل والحذف
   // ==========================================
   const openEditColorModal = (item: any, e: React.MouseEvent) => {
     e.stopPropagation(); // لمنع تفعيل حدث اختيار اللون عند الضغط على زر التعديل
@@ -159,6 +160,20 @@ const AttributesPage = () => {
     );
   };
 
+  // 👈 3. دالة التعامل مع حذف المقاس
+  const handleDeleteSize = (sizeId: number) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا المقاس؟ لا يمكن التراجع عن هذا الإجراء.')) {
+      deleteSizeMutation.mutate(sizeId, {
+        onSuccess: () => {
+          // يمكن إضافة رسالة نجاح هنا إذا أردت
+        },
+        onError: () => {
+          alert('حدث خطأ أثناء محاولة حذف المقاس.');
+        }
+      });
+    }
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen p-6">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -186,66 +201,27 @@ const AttributesPage = () => {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">2. الألوان المتوفرة للمنتج</h2>
-              <button
-                onClick={() => setIsAddColorModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition shadow-sm"
-              >
-                + إضافة لون جديد
-              </button>
             </div>
 
-            {isLoadingColors ? (
-              <p className="text-gray-500">جاري تحميل الألوان...</p>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {clothingItems?.data?.map((item: any) => (
-                  <div
-                    key={item.id}
-                    onClick={() => setSelectedColorItem(item)}
-                    className={`relative cursor-pointer border-2 rounded-xl p-3 flex flex-col items-center transition-all ${selectedColorItem?.id === item.id
-                      ? 'border-blue-600 bg-blue-50 shadow-md transform scale-105'
-                      : 'border-gray-200 hover:border-blue-300'
-                      }`}
-                  >
-                    <img
-                      src={item.image ? item.image.includes('https://res.cloudinary.com') ? item.image : `http://www.marketexpress.somee.com/${item.image}` : '/placeholder-product.png'}
-                      alt={item.color}
-                      className="w-20 h-20 object-cover rounded-lg mb-2 shadow-sm"
-                    />
-                    <span className="font-medium text-gray-800">{item.color}</span>
-
-                    {/* زر تعديل اللون */}
-                    <button
-                      onClick={(e) => openEditColorModal(item, e)}
-                      className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full shadow hover:bg-white text-gray-600 hover:text-blue-600 transition"
-                      title="تعديل اللون"
-                    >
-                      ✏️
-                    </button>
-                  </div>
-                ))}
-                {(!clothingItems?.data || clothingItems.data.length === 0) && (
-                  <div className="col-span-full text-center p-8 text-gray-500 bg-gray-50 rounded-lg border-dashed border-2">
-                    لا توجد ألوان مضافة لهذا المنتج بعد. أضف لوناً للبدء.
-                  </div>
-                )}
-              </div>
-            )}
+            <ProductColorsManager
+              productId={selectedProductId as number}
+              selectedColorId={selectedColorItem?.id}
+              onColorSelect={(color) => setSelectedColorItem(color)}
+              onEditColor={openEditColorModal}
+            />
           </div>
         )}
 
-        {/* 3. قسم المقاسات - تم تحسين الـ UX ليكون أوضح */}
+        {/* 3. قسم المقاسات */}
         {selectedProductId && (
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 animate-fade-in">
             {!selectedColorItem ? (
-              // رسالة واضحة في حال لم يتم اختيار لون بعد
               <div className="text-center py-10 bg-blue-50/50 rounded-lg border-2 border-dashed border-blue-100">
                 <span className="text-4xl mb-3 block">🎨</span>
                 <h3 className="text-lg font-bold text-gray-700">يرجى اختيار لون</h3>
                 <p className="text-gray-500 mt-2">انقر على أحد الألوان في القسم أعلاه لعرض المقاسات المتوفرة وإضافة مقاسات جديدة.</p>
               </div>
             ) : (
-              // عرض المقاسات إذا تم اختيار لون
               <>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -287,13 +263,25 @@ const AttributesPage = () => {
                             </td>
                             <td className="p-4 border-b font-bold text-gray-800">{size.quantity}</td>
                             <td className="p-4 border-b">
-                              {/* زر تعديل المقاس */}
-                              <button
-                                onClick={() => openEditSizeModal(size)}
-                                className="text-blue-600 hover:text-blue-800 font-medium px-3 py-1 bg-blue-50 hover:bg-blue-100 rounded transition"
-                              >
-                                تعديل ✏️
-                              </button>
+                              {/* 👈 4. تجميع الأزرار (تعديل وحذف) بجانب بعضها */}
+                              <div className="flex gap-2">
+                                {/* زر تعديل المقاس */}
+                                <button
+                                  onClick={() => openEditSizeModal(size)}
+                                  className="text-blue-600 hover:text-blue-800 font-medium px-3 py-1 bg-blue-50 hover:bg-blue-100 rounded transition"
+                                >
+                                  تعديل ✏️
+                                </button>
+                                
+                                {/* زر حذف المقاس */}
+                                <button
+                                  onClick={() => handleDeleteSize(size.productSizeId)}
+                                  disabled={deleteSizeMutation.isPending}
+                                  className="text-red-600 hover:text-red-800 font-medium px-3 py-1 bg-red-50 hover:bg-red-100 rounded transition disabled:opacity-50"
+                                >
+                                  {deleteSizeMutation.isPending && editingSizeId === size.productSizeId ? 'جاري الحذف...' : 'حذف 🗑️'}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -321,7 +309,6 @@ const AttributesPage = () => {
       {isAddColorModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-            {/* ... (نفس كود الإضافة الخاص بك لم يتغير) ... */}
             <div className="p-5 border-b bg-gray-50 flex justify-between items-center">
               <h3 className="text-lg font-bold">إضافة لون جديد</h3>
               <button onClick={() => setIsAddColorModalOpen(false)} className="text-gray-500 hover:text-red-500 text-2xl">&times;</button>
@@ -375,7 +362,6 @@ const AttributesPage = () => {
       {isAddSizeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-            {/* ... (نفس كود الإضافة الخاص بك لم يتغير) ... */}
             <div className="p-5 border-b bg-gray-50 flex justify-between items-center">
               <h3 className="text-lg font-bold">إضافة مقاس للون ({selectedColorItem?.color})</h3>
               <button onClick={() => setIsAddSizeModalOpen(false)} className="text-gray-500 hover:text-red-500 text-2xl">&times;</button>

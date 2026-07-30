@@ -1,6 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
+
+export const useGetProductsByFollowedStores = () => {
+    return useQuery({
+        queryKey: ['followedStoresProducts'],
+        queryFn: async () => {
+            const { data } = await api.get('/StoreFollower/GetProductsByFollowerStores');
+            return data;
+        },
+        // أضفنا retry: false حتى لا يعيد المحاولة كثيراً في حال لم يكن المستخدم مسجل الدخول (401)
+        retry: false 
+    });
+};
 // جلب المنتجات حسب رقم المتجر
 export const useGetProducts = (storeId?: number) => { // جعلناه اختيارياً بوضع علامة استفهام
     return useQuery({

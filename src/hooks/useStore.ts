@@ -9,19 +9,14 @@ interface ApiErrorResponse {
 
 // =========================================================
 // 1️⃣ أولاً: دوال الجلب (GET) باستخدام useQuery
-// (يتم تصدير كل دالة بشكل منفصل لسهولة الاستخدام والتحديث التلقائي)
 // =========================================================
 
 // --- Store Queries ---
-// تحديث الهوك ليقبل storeId اختياري (يمكن أن يكون string أو number أو undefined)
 export const useGetAllStores = (storeId?: string | number) => {
     return useQuery({
-        // 💡 أضفنا storeId إلى الـ queryKey لكي يتحدث الكاش تلقائياً عند تغيير رقم المتجر
         queryKey: ['allStores', storeId],
         queryFn: async () => {
             const { data } = await api.get('/Store/GetAllStores', {
-                // 💡 هنا نمرر الـ StoreId للسيرفر كـ Query Parameter (?StoreId=1)
-                // استخدمت الاسم الحرفي "StoreId" بالكابيتال بناءً على كلام المطور
                 params: storeId ? { storeId: storeId } : {}
             });
             return data;
@@ -43,11 +38,10 @@ export const useGetAllProductsByStore = (storeId: string | number | null) => {
     return useQuery({
         queryKey: ['productsByStore', storeId],
         queryFn: async () => {
-            // افترضنا أن المعرف يتم تمريره كـ Query Parameter (مثال: ?storeId=1)
             const { data } = await api.get('/Store/GetAllProductsByStore', { params: { storeId } });
             return data;
         },
-        enabled: !!storeId, // الدالة لن تعمل إلا إذا كان هناك storeId
+        enabled: !!storeId,
     });
 };
 
@@ -83,18 +77,18 @@ export const useGetAllRequestStoreByUser = () => {
         }
     });
 };
+
 export const useProductDetailsStore = (productId: string | number | null) => {
-    // أضفنا كلمة return هنا لكي ترجع البيانات للمكون
     return useQuery({
         queryKey: ['clothingItem', productId],
         queryFn: async () => {
             const { data } = await api.get(`/ClothingItem/GetAll/${productId}`);
             return data;
         },
-        // سيعمل فقط إذا كان الـ productId موجوداً وليس null أو undefined
         enabled: !!productId
     });
 };
+
 export const useGetSizesByProductColor = (productId: number | null, color: string | null) => {
     return useQuery({
         queryKey: ['productSizes', productId, color],
@@ -104,17 +98,14 @@ export const useGetSizesByProductColor = (productId: number | null, color: strin
             });
             return data;
         },
-        // سيعمل الاستدعاء فقط إذا كان productId واللون متوفرين
         enabled: !!productId && !!color,
     });
 };
 
-// 🎁 Hook لجلب المنتجات المقترحة (POST)
 export const useGetSuggestProducts = (productId: number | null) => {
     return useQuery({
         queryKey: ['suggestedProducts', productId],
         queryFn: async () => {
-            // بما أن الـ API يستقبل ProductId كـ Query Parameter والطلب نوعه POST
             const { data } = await api.post(`/ClothingItem/GetSuggestByProductId`, null, {
                 params: { ProductId: productId }
             });
@@ -123,6 +114,7 @@ export const useGetSuggestProducts = (productId: number | null) => {
         enabled: !!productId,
     });
 };
+
 export const useGetFilterRequestStoreByUser = (filters: any) => {
     return useQuery({
         queryKey: ['filteredStoreRequests', filters],
@@ -139,18 +131,15 @@ export const useGetFilterRequestStoreByUser = (filters: any) => {
 // =========================================================
 
 export const useStore = () => {
-    // نستخدم queryClient لتحديث البيانات (Refetch) تلقائياً بعد أي عملية تعديل
     const queryClient = useQueryClient();
 
     // ---------------- Store Mutations ----------------
 
     const updateStoreMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
         mutationFn: async (storeData) => {
-            // 👇 لاحظ أننا نستخدم الرابط النسبي /api مباشرة، وVite سيتكفل بتحويله للخادم الخارجي سراً
             const { data } = await api.patch('/Store/UpdateStore', storeData, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    // لا تضع 'Content-Type': 'multipart/form-data' هنا
                 }
             });
             return data;
@@ -162,8 +151,27 @@ export const useStore = () => {
         },
         onError: (err) => {
             toast.error("حدث خطأ أثناء التحديث");
-            console.log(err);
+            console.error(err);
         }
+    });
+
+    // دالة طلب API لحذف المتجر
+    const deleteStoreApi = async (storeId: string | number) => {
+        const { data } = await api.delete(`/Store/Delete/${storeId}`);
+        return data;
+    };
+
+    const deleteStoreMutation = useMutation<any, AxiosError<ApiErrorResponse>, string | number>({
+        mutationFn: (storeId) => deleteStoreApi(storeId),
+        onSuccess: () => {
+            toast.success("تم حذف المتجر بنجاح");
+            queryClient.invalidateQueries({ queryKey: ['allStores'] });
+            queryClient.invalidateQueries({ queryKey: ['adminStores'] });
+        },
+        onError: (error) => {
+            toast.error("حدث خطأ أثناء حذف المتجر");
+            console.error('حدث خطأ أثناء حذف المتجر:', error);
+        },
     });
 
     // ---------------- StoreCategory Mutations ----------------
@@ -193,28 +201,23 @@ export const useStore = () => {
     // ---------------- StoreRequest Mutations ----------------
 
     const addStoreRequestMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
-    mutationFn: async (requestData) => {
-        // 1. يفضل تغيير http إلى https إذا كان السيرفر يدعم ذلك لتجنب مشكلة Mixed Content
-        // http://www.marketexpress.somee.com/
-        const { data } = await axios.post('http://marketexpress.somee.com/api/StoreRequest/Add', requestData, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                // 2. ❌ قم بإزالة السطر التالي تماماً:
-                // 'Content-Type': "multipart/form-data" 
-            }
-        });
-        return data;
-    },
-    onSuccess: () => {
-        toast.success("تم إرسال الطلب بنجاح");
-        queryClient.invalidateQueries({ queryKey: ['userStoreRequests'] });
-    },
-    onError: (err) => {
-        toast.error("حدث خطأ");
-        console.log(err);
-        console.log(err.message);
-    }
-});
+        mutationFn: async (requestData) => {
+            const { data } = await axios.post('http://marketexpress.somee.com/api/StoreRequest/Add', requestData, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                }
+            });
+            return data;
+        },
+        onSuccess: () => {
+            toast.success("تم إرسال الطلب بنجاح");
+            queryClient.invalidateQueries({ queryKey: ['userStoreRequests'] });
+        },
+        onError: (err) => {
+            toast.error("حدث خطأ");
+            console.error(err);
+        }
+    });
 
     const cancelStoreRequestMutation = useMutation<any, AxiosError<ApiErrorResponse>, string | number>({
         mutationFn: async (storeRequestId) => {
@@ -229,7 +232,6 @@ export const useStore = () => {
 
     const updateStoreRequestMutation = useMutation<any, AxiosError<ApiErrorResponse>, { storeId: string | number, requestData: any }>({
         mutationFn: async ({ storeId, requestData }) => {
-            // نمرر الـ ID في المسار والبيانات في جسم الطلب (Body)
             const { data } = await api.put(`/StoreRequest/UpdateRequest/${storeId}/update`, requestData);
             return data;
         },
@@ -243,21 +245,20 @@ export const useStore = () => {
         // Store
         updateStore: updateStoreMutation.mutate,
         isUpdatingStore: updateStoreMutation.isPending,
+        deleteStore: deleteStoreMutation.mutate,
+        isDeletingStore: deleteStoreMutation.isPending,
 
         // StoreCategory
         addCategory: addStoreCategoryMutation.mutate,
         isAddingCategory: addStoreCategoryMutation.isPending,
-
         deleteCategory: deleteStoreCategoryMutation.mutate,
         isDeletingCategory: deleteStoreCategoryMutation.isPending,
 
         // StoreRequest
         addStoreRequest: addStoreRequestMutation.mutate,
         isAddingRequest: addStoreRequestMutation.isPending,
-
         cancelStoreRequest: cancelStoreRequestMutation.mutate,
         isCancelingRequest: cancelStoreRequestMutation.isPending,
-
         updateStoreRequest: updateStoreRequestMutation.mutate,
         isUpdatingRequest: updateStoreRequestMutation.isPending,
     };
