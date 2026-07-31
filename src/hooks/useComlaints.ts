@@ -47,7 +47,15 @@ export function useComplaints() {
             enabled: !!complaintId,
         });
     };
-
+const useGetAllComplaintsByUser = () => {
+    return useQuery({
+        queryKey: ['userComplaints'],
+        queryFn: async () => {
+            const response = await api.get(`/Complaint/GetAllComplaintsByUser`);
+            return response.data;
+        },
+    });
+};
     // قراءة/تحديث الرسالة (PUT /api/Message/ReadMessage)
     const useReadMessage = () => {
         return useMutation({
@@ -64,6 +72,7 @@ export function useComplaints() {
     return {
         useGetAllComplaints,
         useAddComplaint,
+        useGetAllComplaintsByUser,
         useGetMessagesByComplaintId,
         useReadMessage,
     };

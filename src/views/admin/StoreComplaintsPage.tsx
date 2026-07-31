@@ -1,54 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useComplaints } from '../../hooks/useComlaints';
-import { useQueryClient } from '@tanstack/react-query'; // 👈 استيراد QueryClient
-import { HubConnectionBuilder, LogLevel, HttpTransportType } from '@microsoft/signalr'; // 👈 استيراد SignalR
+import { useQueryClient } from '@tanstack/react-query';
+import { HubConnectionBuilder, LogLevel, HttpTransportType, HubConnection } from '@microsoft/signalr';
+import { AuthContext } from '../../contexts/AuthContext';
 
 export default function StoreComplaintsPage() {
-    const { useGetAllComplaints, useGetMessagesByComplaintId, useReadMessage } = useComplaints();
-    const queryClient = useQueryClient(); // 👈 تهيئة QueryClient لتحديث الكاش
+    const { useGetAllComplaints, useGetMessagesByComplaintId } = useComplaints();
+    const queryClient = useQueryClient();
 
     const { data: complaintsResponse, isLoading: isLoadingComplaints } = useGetAllComplaints();
     const complaintsList = complaintsResponse?.data || (Array.isArray(complaintsResponse) ? complaintsResponse : []);
 
     const [selectedComplaintId, setSelectedComplaintId] = useState(null);
+    const [newMessageText, setNewMessageText] = useState(""); // 👈 حالة لحفظ النص المكتوب
 
     const { data: messagesResponse, isLoading: isLoadingMessages } = useGetMessagesByComplaintId(selectedComplaintId);
     const messagesList = messagesResponse?.data || (Array.isArray(messagesResponse) ? messagesResponse : []);
+    const { user } = useContext(AuthContext);
+    // 👈 حالة لحفظ كائن الاتصال بـ SignalR لاستخدامه في الإرسال
+    const [hubConnection, setHubConnection] = useState<HubConnection | null>(null);
 
-    const { mutate: markAsRead } = useReadMessage();
-
-    // 👇 إضافة useEffect الخاص بـ SignalR
     useEffect(() => {
-        // 1. جلب التوكن من المكان الذي تحفظه فيه (localStorage أو cookies أو context)
-        const token = localStorage.getItem('token'); // ⚠️ عدّل هذا السطر بناءً على طريقة حفظك للتوكن
+        const token = localStorage.getItem('token');
 
         if (!token) return;
 
-        // 2. بناء الاتصال بناءً على تعليمات الباكند
         const connection = new HubConnectionBuilder()
             .withUrl("http://marketexpress.somee.com/chatHub", {
-                accessTokenFactory: () => token, // إرسال التوكن
-                transport: HttpTransportType.WebSockets // إجبار الاتصال عبر WebSocket
+                accessTokenFactory: () => token,
+                transport: HttpTransportType.WebSockets
             })
             .configureLogging(LogLevel.Information)
-            .withAutomaticReconnect() // إعادة الاتصال تلقائياً لو انقطع
+            .withAutomaticReconnect()
             .build();
 
-        // 3. بدء الاتصال
         connection.start()
-            .then(() => console.log("✅ متصل بـ SignalR بنجاح"))
+            .then(() => {
+                console.log("✅ متصل بـ SignalR بنجاح");
+                setHubConnection(connection); // 👈 حفظ الاتصال بعد نجاحه
+            })
             .catch(err => console.error("❌ خطأ في الاتصال بـ SignalR: ", err));
 
-        // 4. الاستماع للرسائل الجديدة (⚠️ تأكد من صديقتك من اسم الحدث الذي يرسله الباكند)
-        // افترضت هنا أن اسم الحدث هو "ReceiveMessage"
+        // استقبال الرسائل
         connection.on("ReceiveMessage", (newMessage) => {
             console.log("رسالة جديدة:", newMessage);
-
-            // تحديث رسائل الشكوى في React Query مباشرة بدون إعادة تحميل
             queryClient.setQueryData(['messages', newMessage.complaintId], (oldData: any) => {
                 if (!oldData) return oldData;
-                
-                // إضافة الرسالة الجديدة للمصفوفة الحالية
                 return {
                     ...oldData,
                     data: [...oldData.data, newMessage]
@@ -56,18 +53,42 @@ export default function StoreComplaintsPage() {
             });
         });
 
-        // 5. إغلاق الاتصال عند مغادرة الصفحة
         return () => {
             connection.stop();
         };
-    }, [queryClient]); // سيعمل مرة واحدة عند تحميل المكون
+    }, [queryClient]);
 
-    const handleSelectComplaint = (id: any) => {
+    // 👈 الدالة التي تنفذ عند اختيار شكوى
+    const handleSelectComplaint = async (id: any) => {
         setSelectedComplaintId(id);
-        markAsRead(id);
+
+        // 👈 إخبار الباكند أن المستخدم فتح المحادثة والرسائل قُرئت (كما طلبت صديقتك)
+        if (hubConnection && hubConnection.state === "Connected") {
+            try {
+                await hubConnection.invoke("MarkMessagesAsRead", { ComplaintId: id });
+            } catch (err) {
+                console.error("خطأ في تحديث حالة القراءة:", err);
+            }
+        }
     };
 
-    // ... (باقي كود الـ return الخاص بالواجهة كما هو بدون تغيير) ...
+    // 👈 دالة إرسال الرسالة إلى الباكند
+    const handleSendMessage = async () => {
+        if (!newMessageText.trim() || !selectedComplaintId || !hubConnection) return;
+
+        try {
+            // استدعاء الدالة SendMessageAsync التي برمجتها صديقتك
+            await hubConnection.invoke("SendMessageAsync", {
+                ComplaintId: selectedComplaintId,
+                MessageText: newMessageText
+            });
+
+            // تفريغ حقل النص بعد الإرسال بنجاح
+            setNewMessageText("");
+        } catch (error) {
+            console.error("❌ خطأ أثناء إرسال الرسالة:", error);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -89,15 +110,11 @@ export default function StoreComplaintsPage() {
                             complaintsList.map((complaint: any) => (
                                 <div
                                     key={complaint.id}
-                                    onClick={() => handleSelectComplaint(complaint.id)}
-                                    className={`p-4 cursor-pointer transition-all hover:bg-gray-50 ${selectedComplaintId === complaint.id ? 'bg-blue-50/70 border-r-4 border-blue-600' : ''
-                                        }`}
+                                    onClick={() => handleSelectComplaint(complaint.id || complaint.complaintId || complaint.Id)}
+                                    className={`p-4 cursor-pointer transition-all hover:bg-gray-50 ${selectedComplaintId === complaint.id ? 'bg-blue-50/70 border-r-4 border-blue-600' : ''}`}
                                 >
                                     <div className="flex justify-between items-start mb-1">
                                         <h4 className="font-bold text-sm text-gray-900 truncate">{complaint.title}</h4>
-                                        <span className="text-[10px] text-gray-400">
-                                            {new Date(complaint.createdAt || Date.now()).toLocaleDateString('ar-SA')}
-                                        </span>
                                     </div>
                                     <p className="text-xs text-gray-500 line-clamp-1">{complaint.description}</p>
                                 </div>
@@ -125,16 +142,48 @@ export default function StoreComplaintsPage() {
                                 ) : messagesList.length === 0 ? (
                                     <div className="flex justify-center items-center h-full text-gray-400 text-xs">لا توجد رسائل مرسلة ضمن هذه الشكوى بعد.</div>
                                 ) : (
-                                    messagesList.map((msg: any, index: any) => (
-                                        <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-1">
-                                            <div className="flex justify-between items-center text-[10px] text-gray-400">
-                                                <span className="font-bold text-gray-700">مرسل من الزبون</span>
-                                                <span>{new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    messagesList.map((msg: any, index: any) => {
+                                        // 👈 2. تحديد هوية المستخدم (هل أنا من أرسل هذه الرسالة؟)
+                                        const currentUserId = user?.id || user?.uid || user?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+
+                                        // تأكدي من اسم الخاصية القادمة من الباك إند (هل هي senderId أم userId أم شيء آخر)
+                                        const isMe = msg.senderId === currentUserId;
+
+                                        return (
+                                            <div key={index} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                                <div className={`max-w-[75%] p-3 rounded-xl text-sm shadow-sm space-y-1 ${isMe
+                                                        ? 'bg-blue-600 text-white rounded-tl-none' // رسائل التاجر (أزرق)
+                                                        : 'bg-white text-gray-800 border border-gray-100 rounded-tr-none' // رسائل الزبون (أبيض)
+                                                    }`}>
+                                                    <div className={`flex justify-between items-center text-[10px] ${isMe ? 'text-blue-200' : 'text-gray-400'} gap-4`}>
+                                                        <span className="font-bold">{isMe ? 'أنت' : 'الزبون'}</span>
+                                                        <span dir="ltr">{new Date(msg.createdAt || msg.sendAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                    </div>
+                                                    <p className="whitespace-pre-wrap">{msg.messageText || msg.message || msg.content || msg.text}</p>
+                                                </div>
                                             </div>
-                                           <p>{msg.message || msg.content || msg.description || msg.text || msg.body}</p>
-                                        </div>
-                                    ))
+                                        );
+                                    })
                                 )}
+                            </div>
+
+                            {/* 3️⃣ 👈 حقل الإدخال وزر الإرسال الجديد */}
+                            <div className="p-4 bg-white border-t border-gray-100 flex gap-2">
+                                <input
+                                    type="text"
+                                    value={newMessageText}
+                                    onChange={(e) => setNewMessageText(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                    placeholder="اكتب رسالتك هنا..."
+                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <button
+                                    onClick={handleSendMessage}
+                                    disabled={!newMessageText.trim()}
+                                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-6 py-2 rounded-lg text-sm font-bold transition-colors"
+                                >
+                                    إرسال
+                                </button>
                             </div>
                         </>
                     ) : (

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useRequestStores, useApproveRequest, useRejectRequest } from '../../hooks/useSuperAdmin';
+// قم بتعديل مسار الاستيراد بناءً على مكان ملف الهوك الخاص بك
+import { useStore } from '../../hooks/useStore'; 
 
 const StoreRequestsPage = () => {
     const [statusFilter, setStatusFilter] = useState<'Pending' | 'Approved' | 'Rejected'>('Pending');
@@ -15,11 +17,14 @@ const StoreRequestsPage = () => {
 
     const approveMutation = useApproveRequest();
     const rejectMutation = useRejectRequest();
+    
+    // 1. استخراج دالة الحذف وحالة التحميل من الهوك الخاص بك
+    const { deleteStore, isDeletingStore } = useStore();
 
     const handleApprove = (id: number) => {
         if(window.confirm('هل أنت متأكد من قبول هذا المتجر؟')) {
             approveMutation.mutate(id);
-            if (selectedRequest?.id === id) setSelectedRequest(null); // إغلاق المودال إذا كان مفتوحاً
+            if (selectedRequest?.id === id) setSelectedRequest(null);
         }
     };
 
@@ -27,7 +32,16 @@ const StoreRequestsPage = () => {
         const reason = window.prompt('يرجى إدخال سبب الرفض (اختياري):');
         if(reason !== null) {
             rejectMutation.mutate({ requestId: id, reason });
-            if (selectedRequest?.id === id) setSelectedRequest(null); // إغلاق المودال إذا كان مفتوحاً
+            if (selectedRequest?.id === id) setSelectedRequest(null);
+        }
+    };
+
+    // 2. دالة التعامل مع الحذف
+    const handleDelete = (storeId: number) => {
+        if(window.confirm('هل أنت متأكد من حذف هذا المتجر نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')) {
+            // ملاحظة: تأكد مما إذا كانت الـ API تحتاج إلى req.id أم req.storeId
+            deleteStore(storeId);
+            if (selectedRequest?.id === storeId) setSelectedRequest(null);
         }
     };
 
@@ -89,7 +103,7 @@ const StoreRequestsPage = () => {
                                             {statusFilter === 'Pending' ? 'قيد الانتظار' : statusFilter === 'Approved' ? 'مقبول' : 'مرفوض'}
                                         </span>
                                     </td>
-                                    <td className="p-4 border-b space-x-2 space-x-reverse">
+                                    <td className="p-4 border-b space-x-2 space-x-reverse min-w-[200px]">
                                         {/* زر العرض */}
                                         <button 
                                             onClick={() => setSelectedRequest(req)}
@@ -98,7 +112,7 @@ const StoreRequestsPage = () => {
                                             عرض
                                         </button>
 
-                                        {statusFilter === 'Pending' && (
+                                        {statusFilter === 'Pending' ? (
                                             <>
                                                 <button 
                                                     onClick={() => handleApprove(req.id)}
@@ -115,6 +129,15 @@ const StoreRequestsPage = () => {
                                                     {rejectMutation.isPending ? 'جاري الرفض...' : 'رفض'}
                                                 </button>
                                             </>
+                                        ) : (
+                                            /* 3. زر الحذف (يظهر غالباً للمتاجر المقبولة أو المرفوضة) */
+                                            <button 
+                                                onClick={() => handleDelete(req.id)} // قد تحتاج لتغييرها لـ req.storeId حسب هيكل البيانات لديك
+                                                className="bg-red-600 mx-3 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm transition disabled:opacity-50"
+                                                disabled={isDeletingStore}
+                                            >
+                                                {isDeletingStore ? 'جاري الحذف...' : 'حذف'}
+                                            </button>
                                         )}
                                     </td>
                                 </tr>
@@ -139,6 +162,7 @@ const StoreRequestsPage = () => {
                         </div>
                         
                         <div className="p-6 space-y-4 text-right">
+                            {/* ... (بقية تفاصيل النافذة المنبثقة كما هي في كودك) ... */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">اسم المتجر</p>
@@ -182,7 +206,7 @@ const StoreRequestsPage = () => {
                         </div>
 
                         <div className="p-6 border-t flex justify-end space-x-2 space-x-reverse bg-gray-50">
-                            {statusFilter === 'Pending' && (
+                            {statusFilter === 'Pending' ? (
                                 <>
                                     <button 
                                         onClick={() => handleApprove(selectedRequest.id)}
@@ -197,6 +221,15 @@ const StoreRequestsPage = () => {
                                         رفض المتجر
                                     </button>
                                 </>
+                            ) : (
+                                /* إضافة زر الحذف أيضاً بداخل النافذة المنبثقة للمتاجر غير المعلقة */
+                                <button 
+                                    onClick={() => handleDelete(selectedRequest.id)}
+                                    className="bg-red-600 hover:bg-red-700 mx-3 text-white px-6 py-2 rounded-md transition disabled:opacity-50"
+                                    disabled={isDeletingStore}
+                                >
+                                    {isDeletingStore ? 'جاري الحذف...' : 'حذف المتجر'}
+                                </button>
                             )}
                             <button 
                                 onClick={() => setSelectedRequest(null)}

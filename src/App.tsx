@@ -17,7 +17,7 @@ const ConfirmEmailPassword = lazy(() => import("./views/auth/ConfirmEmailPasswor
 const ForgotPassword = lazy(() => import("./views/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./views/auth/ResetPassword"));
 const AllStores = lazy(() => import("./views/store/AllStores"));
-const StoreDetails = lazy(() => import("./views/store/StoreDetails"));
+const StoreDetails = lazy(() => import("./views/store/StoreDetails/StoreDetails"));
 const ProductDetails = lazy(() => import("./views/store/ProductDetails"));
 const Cart = lazy(() => import("./views/store/Cart"));
 const NotFound = lazy(() => import('./views/NotFound'));
@@ -33,6 +33,7 @@ const RolesPage = lazy(() => import('./views/superAdmin/RolesPage'));
 const TransactionsPage = lazy(() => import('./views/superAdmin/TransactionsPage'));
 const UsersManagementPage = lazy(() => import('./views/superAdmin/UsersManagementPage'));
 const CategoryPage = lazy(() => import('./views/superAdmin/Category'));
+const OrdersTab = lazy(() => import('./views/superAdmin/OrdersTab'));
 
 
 
@@ -55,6 +56,7 @@ const ProductFormPage = lazy(() => import('./views/admin/ProductFormPage'));
 const ProductEditPage = lazy(() => import('./views/admin/ProductEditPage'));
 const ProductsPage = lazy(() => import('./views/admin/ProductsPage'));
 const StoreComplaintsPage = lazy(() => import('./views/admin/StoreComplaintsPage'));
+const AdminStorePosts = lazy(() => import('./views/admin/StorePosts/AdminStorePosts'));
 
 
 
@@ -186,7 +188,10 @@ const router = createBrowserRouter([
       {
         path: "categories",
         element: <Suspense fallback={<Loading />}><CategoryPage /></Suspense>
-      }
+      }, {
+        path: "orders",
+        element: <Suspense fallback={<Loading />}><OrdersTab /></Suspense>
+      },
     ]
   },
   {
@@ -200,6 +205,9 @@ const router = createBrowserRouter([
       {
         path: "settings",
         element: <Suspense fallback={<Loading />}><StoreSettingsPage /></Suspense>
+      }, {
+        path: "posts",
+        element: <Suspense fallback={<Loading />}><AdminStorePosts /></Suspense>
       },
       {
         path: "attributes",

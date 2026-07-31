@@ -15,6 +15,7 @@ const SuperAdminLayout = () => {
         { name: 'الرئيسية', path: '/super-admin' },
         { name: 'طلبات المتاجر', path: '/super-admin/requests' },
         { name: 'إدارة الأدوار', path: '/super-admin/roles' },
+        { name: 'إدارة الطلبات', path: '/super-admin/orders' },
         // { name: 'العمليات المالية', path: '/super-admin/transactions' },
         { name: 'إدارة المستخدمين', path: '/super-admin/users' },
         { name: 'إدارة الفئات', path: '/super-admin/categories' },
