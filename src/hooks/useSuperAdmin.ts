@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 
 // ==========================================
 // 1️⃣ واجهات البيانات (Interfaces)
@@ -21,15 +22,18 @@ export interface StoreFilterParams {
     pageSize?: number;
 }
 
+// 👈 إضافة واجهة فلترة الطلبيات (الجديدة)
+export interface OrderFilterParams {
+    orderStatus?: 'Processing' | 'Cancelled' | 'Delivered';
+    pageNumber?: number;
+    pageSize?: number;
+}
+
 // ==========================================
 // 2️⃣ دوال الاتصال بالـ API
 // ==========================================
 
-export const revokeToken = async (userId: string): Promise<any> => {
-    const response = await api.post(`/SuperAdmin/RevokeToken/${userId}`);
-    return response.data;
-};
-
+// --- المتاجر والأدوار ---
 export const fetchStoreCategories = async (storeId: number): Promise<any> => {
     const response = await api.get(`/SuperAdmin/GetAllStoreCategory/${storeId}`);
     return response.data?.data ?? response.data;
@@ -55,24 +59,47 @@ export const fetchRequestStoresByFilter = async (params: StoreFilterParams): Pro
     return response.data?.data ?? response.data;
 };
 
+// --- المستخدمين (جديد) ---
+export const revokeToken = async (userId: string): Promise<any> => {
+    const response = await api.post(`/SuperAdmin/RevokeToken/${userId}`);
+    return response.data;
+};
+
+export const fetchActiveUsers = async (): Promise<any> => {
+    const response = await api.get('/SuperAdmin/ActiveUsers');
+    return response.data?.data ?? response.data;
+};
+
+export const fetchBannedUsers = async (): Promise<any> => {
+    const response = await api.get('/SuperAdmin/BannedUsers');
+    return response.data?.data ?? response.data;
+};
+
+export const deleteUser = async (userId: string): Promise<any> => {
+    // بناءً على الـ Swagger، userId يُرسل كـ query parameter
+    const response = await api.delete('/SuperAdmin/DeleteUser', { params: { userId } });
+    return response.data;
+};
+
+// --- الطلبيات (جديد) ---
+export const fetchFilterOrders = async (params: OrderFilterParams): Promise<any> => {
+    const response = await api.get('/SuperAdmin/GetAllFilterOrders', { params });
+    return response.data?.data ?? response.data;
+};
+
+
 // ==========================================
-// 3️⃣ Hooks
+// 3️⃣ Hooks (الخطافات)
 // ==========================================
 
-// هوك سحب صلاحية مستخدم
-export const useRevokeToken = () => {
-    return useMutation({
-        mutationFn: revokeToken,
-        onSuccess: () => console.log("✅ تم سحب التوكن بنجاح"),
-    });
-};
+// --- المتاجر والأدوار ---
 
 // هوك جلب تصنيفات متجر معين
 export const useStoreCategories = (storeId: number) => {
     return useQuery({
         queryKey: ['storeCategories', storeId],
         queryFn: () => fetchStoreCategories(storeId),
-        enabled: !!storeId, // لا يتم الاستدعاء إلا إذا كان المتجر موجوداً
+        enabled: !!storeId,
     });
 };
 
@@ -117,5 +144,74 @@ export const useRequestStores = (params: StoreFilterParams) => {
     return useQuery({
         queryKey: ['storeRequests', params],
         queryFn: () => fetchRequestStoresByFilter(params),
+    });
+};
+
+
+// --- المستخدمين (جديد ومحدث) ---
+
+// هوك سحب صلاحية مستخدم
+// export const useRevokeToken = () => {
+//     return useMutation({
+//         mutationFn: revokeToken,
+//         onSuccess: () => console.log("✅ تم سحب التوكن بنجاح"),
+//     });
+// };
+export const useRevokeToken = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: revokeToken,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['activeUsers'] });
+            queryClient.invalidateQueries({ queryKey: ['bannedUsers'] });
+            toast.success("✅ تم سحب التوكن بنجاح")
+        },
+    });
+};
+// هوك جلب المستخدمين النشطين
+export const useActiveUsers = () => {
+    return useQuery({
+        queryKey: ['activeUsers'],
+        queryFn: fetchActiveUsers,
+    });
+};
+
+// هوك جلب المستخدمين المحظورين
+export const useBannedUsers = () => {
+    return useQuery({
+        queryKey: ['bannedUsers'],
+        queryFn: fetchBannedUsers,
+    });
+};
+
+// هوك حذف مستخدم
+// ✅ التعديل (Route Param)
+export const useDeleteUser = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (userId: string) => {
+            const response = await api.delete('/SuperAdmin/DeleteUser', {
+                params: { userId } // 👈 تمرير الـ Query Param بالشكل الصحيح
+            });
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['activeUsers'] });
+            queryClient.invalidateQueries({ queryKey: ['bannedUsers'] });
+        },
+        onError: (error: any) => {
+            // استخراج نص الخطأ العائد من الباك إند
+            const backendError = error.response?.data?.message || error.response?.data || 'تعذر حذف المستخدم';
+            alert(typeof backendError === 'string' ? backendError : 'حدث خطأ في السيرفر أثناء عملية الحذف');
+        }
+    });
+};
+// --- الطلبيات (جديد) ---
+
+// هوك جلب الطلبيات مع الفلترة
+export const useFilterOrders = (params: OrderFilterParams) => {
+    return useQuery({
+        queryKey: ['filterOrders', params],
+        queryFn: () => fetchFilterOrders(params),
     });
 };

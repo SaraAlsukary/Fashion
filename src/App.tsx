@@ -31,7 +31,7 @@ const DashboardPage = lazy(() => import('./views/superAdmin/Dashboard'));
 const StoreRequestsPage = lazy(() => import('./views/superAdmin/StoreRequestsPage'));
 const RolesPage = lazy(() => import('./views/superAdmin/RolesPage'));
 const TransactionsPage = lazy(() => import('./views/superAdmin/TransactionsPage'));
-const UsersManagePage = lazy(() => import('./views/superAdmin/UsersManagePage'));
+const UsersManagementPage = lazy(() => import('./views/superAdmin/UsersManagementPage'));
 const CategoryPage = lazy(() => import('./views/superAdmin/Category'));
 
 
@@ -181,7 +181,7 @@ const router = createBrowserRouter([
       },
       {
         path: "users",
-        element: <Suspense fallback={<Loading />}><UsersManagePage /></Suspense>
+        element: <Suspense fallback={<Loading />}><UsersManagementPage /></Suspense>
       },
       {
         path: "categories",
@@ -209,6 +209,7 @@ const router = createBrowserRouter([
         path: "categories",
         element: <Suspense fallback={<Loading />}><CategoriesPage /></Suspense>
       },
+
       {
         path: "complaints",
         element: <Suspense fallback={<Loading />}><StoreComplaintsPage /></Suspense>
