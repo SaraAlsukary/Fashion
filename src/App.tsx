@@ -27,13 +27,13 @@ const StoreRegister = lazy(() => import('./views/auth/StoreRegister'));
 
 // استدعاء ملفات Super Admin بنظام Lazy Loading
 const SuperAdminLayout = lazy(() => import('./components/layouts/SuperAdminLayout'));
-const DashboardPage = lazy(() => import('./views/superAdmin/Dashboard'));
-const StoreRequestsPage = lazy(() => import('./views/superAdmin/StoreRequestsPage'));
-const RolesPage = lazy(() => import('./views/superAdmin/RolesPage'));
-const TransactionsPage = lazy(() => import('./views/superAdmin/TransactionsPage'));
-const UsersManagementPage = lazy(() => import('./views/superAdmin/UsersManagementPage'));
-const CategoryPage = lazy(() => import('./views/superAdmin/Category'));
-const OrdersTab = lazy(() => import('./views/superAdmin/OrdersTab'));
+const DashboardPage = lazy(() => import('./views/SuperAdmin/Dashboard'));
+const StoreRequestsPage = lazy(() => import('./views/SuperAdmin/StoreRequestsPage'));
+const RolesPage = lazy(() => import('./views/SuperAdmin/RolesPage'));
+const TransactionsPage = lazy(() => import('./views/SuperAdmin/TransactionsPage'));
+const UsersManagementPage = lazy(() => import('./views/SuperAdmin/UsersManagementPage'));
+const CategoryPage = lazy(() => import('./views/SuperAdmin/Category'));
+const OrdersTab = lazy(() => import('./views/SuperAdmin/OrdersTab'));
 
 
 
