@@ -186,8 +186,8 @@ export default function Home() {
                                                         store.image
                                                             ? store.image.includes('https://res.cloudinary.com')
                                                                 ? store.image
-                                                                : `/api/image?url=${encodeURIComponent(`http://www.marketexpress.somee.com/${store.image}`)}`
-                                                            : '/placeholder-product.png'
+                                                                : `https://images.weserv.nl/?url=${encodeURIComponent(`http://www.marketexpress.somee.com/${store.image.replace(/^\//, '')}`)}`
+                                                            : '/placeholder-store.png'
                                                     }
                                                  alt={store.name} className="w-full h-full object-cover rounded-lg" />
                                            
