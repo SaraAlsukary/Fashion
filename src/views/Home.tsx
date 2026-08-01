@@ -180,7 +180,18 @@ export default function Home() {
                                     <div>
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="w-14 h-14 bg-gray-50 rounded-xl border border-gray-100 p-1 shadow-sm overflow-hidden group-hover:scale-110 transition-transform duration-500">
-                                                <img src={store.logo ? `http://www.marketexpress.somee.com/${store.logo}` : '/placeholder-store.png'} alt={store.name} className="w-full h-full object-cover rounded-lg" />
+                                                <img 
+                                                
+                                                    src={
+                                                        store.image
+                                                            ? store.image.includes('https://res.cloudinary.com')
+                                                                ? store.image
+                                                                : `/api/image?url=${encodeURIComponent(`http://www.marketexpress.somee.com/${store.image}`)}`
+                                                            : '/placeholder-product.png'
+                                                    }
+                                                 alt={store.name} className="w-full h-full object-cover rounded-lg" />
+                                           
+                                           
                                             </div>
                                             <span className="text-moda-gold bg-moda-gold/10 text-xs font-semibold px-2 py-1 rounded-md">
                                                 ★ 5.0
