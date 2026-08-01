@@ -67,8 +67,13 @@ export default function Home() {
                                         {/* قسم الصورة والشارات */}
                                         <div className="h-64 bg-gray-50 relative overflow-hidden">
                                             <img
-                                                src={product.image ? product.image.includes('https://res.cloudinary.com') ? product.image : `http://www.marketexpress.somee.com/${product.image}` : '/placeholder-product.png'}
-                                                alt={product.name}
+                                                src={
+                                                    product.image
+                                                        ? product.image.includes('https://res.cloudinary.com')
+                                                            ? product.image
+                                                            : `/api/image?url=${encodeURIComponent(`http://www.marketexpress.somee.com/${product.image}`)}`
+                                                        : '/placeholder-product.png'
+                                                } alt={product.name}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                             {hasDiscount && (
