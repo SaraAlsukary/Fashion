@@ -204,14 +204,19 @@ export default function Register() {
                     {isRegistering ? 'جاري إنشاء الحساب...' : 'إنشاء حساب'}
                 </button>
             </form>
-           
+
             <p className="text-center text-sm text-gray-500 mt-6">
                 لديك حساب بالفعل؟{' '}
                 <Link to="/auth/login" className="font-bold text-moda-purple hover:underline">
                     تسجيل الدخول
                 </Link>
             </p>
-        
+            <p className="text-center text-sm text-gray-500 mt-6">
+                لم يتأكد حسابك ؟{' '}
+                <Link to="/auth/confirm-email" className="font-bold text-moda-purple hover:underline">
+                    تأكيد الحساب
+                </Link>
+            </p>
         </div>
     );
 }

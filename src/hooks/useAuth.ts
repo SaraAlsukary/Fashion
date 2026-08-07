@@ -77,11 +77,14 @@ export const useAuth = () => {
             const { data } = await api.post('/Auth/Register', userData);
             return data;
         },
-        onSuccess: (userData) => {
-            toast.success(" يرجى تأكيد الحساب حتى تكتمل عملية انشاء الحساب")
+        // 💡 نستخدم variables للحصول على البيانات التي أدخلها المستخدم
+        onSuccess: (_, variables) => {
+            toast.success("يرجى تأكيد الحساب حتى تكتمل عملية انشاء الحساب");
 
-            // التوجيه لصفحة تأكيد البريد الإلكتروني بعد إنشاء الحساب بنجاح
-            navigate('/auth/confirm-email', { state: { email: userData.email } });
+            // ✅ حفظ الإيميل في الذاكرة المحلية لمنع ضياعه عند تحديث الصفحة
+            localStorage.setItem('pendingEmail', variables.email);
+
+            navigate('/auth/confirm-email', { state: { email: variables.email } });
         }
     });
 

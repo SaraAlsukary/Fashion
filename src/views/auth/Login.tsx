@@ -14,7 +14,7 @@ export default function Login() {
 
     const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-    const handleLogin = (e:any) => {
+    const handleLogin = (e: any) => {
         e.preventDefault();
         let currentErrors = { email: '', password: '' };
         let isValid = true;
@@ -107,8 +107,8 @@ export default function Login() {
                     type="submit"
                     disabled={isLoggingIn}
                     className={`w-full py-3.5 rounded-xl font-bold transition-all shadow-md mt-4 ${isLoggingIn
-                            ? 'bg-gray-400 cursor-not-allowed text-white'
-                            : 'bg-moda-purple hover:bg-moda-purpleHover text-white hover:shadow-lg active:scale-[0.98]'
+                        ? 'bg-gray-400 cursor-not-allowed text-white'
+                        : 'bg-moda-purple hover:bg-moda-purpleHover text-white hover:shadow-lg active:scale-[0.98]'
                         }`}
                 >
                     {isLoggingIn ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
@@ -119,6 +119,12 @@ export default function Login() {
                 ليس لديك حساب؟{' '}
                 <Link to="/auth/register" className="font-bold text-moda-purple hover:underline">
                     إنشاء حساب جديد
+                </Link>
+            </p>
+            <p className="text-center text-sm text-gray-500 mt-6">
+                لم يتأكد حسابك ؟{' '}
+                <Link to="/auth/confirm-email" className="font-bold text-moda-purple hover:underline">
+                    تأكيد الحساب
                 </Link>
             </p>
         </div>

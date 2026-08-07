@@ -62,7 +62,7 @@ export default function StorePosts({ storeId }: { storeId: number }) {
                             )}
 
                             {/* 3️⃣ زر التفاعل مع القائمة المنبثقة */}
-                            <div className="flex gap-4 pt-1 relative group">
+                            <div className="flex gap-4 pt-1 relative group">  
                                 {/* صندوق الإيموجيات المنبثق (يظهر عند الـ Hover) */}
                                 <div className="absolute bottom-full mb-2 right-0 bg-white border border-gray-100 shadow-[0_4px_15px_rgba(0,0,0,0.1)] rounded-full px-3 py-2 flex gap-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 translate-y-2 group-hover:translate-y-0">
                                     {Object.entries(REACTION_MAP).map(([type, data]) => (
