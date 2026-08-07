@@ -8,7 +8,7 @@ export default function StoreComplaintsPage() {
     const { useGetAllComplaints, useGetMessagesByComplaintId } = useComplaints();
     const queryClient = useQueryClient();
 
-    const { data: complaintsResponse, isLoading: isLoadingComplaints } = useGetAllComplaints();
+    const { data: complaintsResponse } = useGetAllComplaints();
     const complaintsList = complaintsResponse?.data || (Array.isArray(complaintsResponse) ? complaintsResponse : []);
 
     const [selectedComplaintId, setSelectedComplaintId] = useState(null);
