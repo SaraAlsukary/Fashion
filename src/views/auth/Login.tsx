@@ -121,9 +121,10 @@ export default function Login() {
                     إنشاء حساب جديد
                 </Link>
             </p>
+            
             <p className="text-center text-sm text-gray-500 mt-6">
                 لم يتأكد حسابك ؟{' '}
-                <Link to="/auth/confirm-email" className="font-bold text-moda-purple hover:underline">
+                <Link to="/auth/confirm-email-confirm" className="font-bold text-moda-purple hover:underline">
                     تأكيد الحساب
                 </Link>
             </p>

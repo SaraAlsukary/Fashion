@@ -13,6 +13,7 @@ const Home = lazy(() => import("./views/Home"));
 const Login = lazy(() => import("./views/auth/Login"));
 const Register = lazy(() => import("./views/auth/Register"));
 const ConfirmEmail = lazy(() => import("./views/auth/ConfirmEmail"));
+const ConfirmEmailConfirm = lazy(() => import("./views/auth/ConfirmEmailConfirm"));
 const ConfirmEmailPassword = lazy(() => import("./views/auth/ConfirmEmailPassword"));
 const ForgotPassword = lazy(() => import("./views/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./views/auth/ResetPassword"));
@@ -130,6 +131,11 @@ const router = createBrowserRouter([
       {
         path: "confirm-email",
         element: <Suspense fallback={<Loading />}><ConfirmEmail /></Suspense>
+      }, {
+        path: 'confirm-email-confirm',
+        element: <Suspense fallback={<Loading />}>
+          <ConfirmEmailConfirm />
+        </Suspense>
       },
       {
         path: "confirm-email-password",
