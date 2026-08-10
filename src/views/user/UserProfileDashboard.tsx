@@ -1,13 +1,15 @@
-// pages/UserProfileDashboard.tsx (أو حسب مسارك)
+// pages/UserProfileDashboard.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileTab from '../../components/user/ProfileTab';
 import OrdersTab from '../../components/user/OrdersTab';
 import WalletTab from '../../components/user/WalletTab';
 import StoreRequestsTab from '../../components/user/StoreRequestsTab';
+import ComplaintsTab from '../../components/user/ComplaintsTab';
 
 export default function UserProfileDashboard() {
-    const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wallet' | 'storeRequests'>('profile');
+    // إضافة 'complaints' إلى الخيارات المتاحة
+    const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wallet' | 'storeRequests' | 'complaints'>('profile');
     const navigate = useNavigate();
     const roleNames = JSON.parse(localStorage.getItem('roleNames') || '[]');
 
@@ -42,6 +44,13 @@ export default function UserProfileDashboard() {
                     >
                         🏪 طلبات فتح متجر
                     </button>
+                    {/* الزر الجديد الخاص بالشكاوى */}
+                    <button
+                        onClick={() => setActiveTab('complaints')}
+                        className={`w-full text-right px-4 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-3 ${activeTab === 'complaints' ? 'bg-amber-50 text-amber-600' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                        ⚠️ الشكاوى والدعم
+                    </button>
 
                     {roleNames && roleNames.includes('Admin') && (
                         <button
@@ -59,6 +68,7 @@ export default function UserProfileDashboard() {
                     {activeTab === 'orders' && <OrdersTab />}
                     {activeTab === 'wallet' && <WalletTab />}
                     {activeTab === 'storeRequests' && <StoreRequestsTab />}
+                    {activeTab === 'complaints' && <ComplaintsTab />} {/* عرض مكون الشكاوى */}
                 </div>
             </div>
         </div>
