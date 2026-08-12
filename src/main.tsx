@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext.tsx';
 // أضف هذا السطر في أعلى الملف مباشرة
 import 'leaflet/dist/leaflet.css';
+import { SignalRProvider } from './contexts/SignalRContext.tsx'
 // 2. إنشاء نسخة (Instance) جديدة من الـ QueryClient خارج المكون
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,11 +21,13 @@ const queryClient = new QueryClient({
 });
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-          <App />
-        <Toaster position='top-center'/>
+        {/* تغليف التطبيق بـ SignalRProvider سيجعل الاتصال يبدأ مع تحميل التطبيق */}
+        <SignalRProvider>
+           <App />
+           <Toaster position='top-center'/>
+        </SignalRProvider>
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,

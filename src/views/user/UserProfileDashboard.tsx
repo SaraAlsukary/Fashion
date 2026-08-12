@@ -5,7 +5,7 @@ import ProfileTab from '../../components/user/ProfileTab';
 import OrdersTab from '../../components/user/OrdersTab';
 import WalletTab from '../../components/user/WalletTab';
 import StoreRequestsTab from '../../components/user/StoreRequestsTab';
-import ComplaintsTab from '../../components/user/ComplaintsTab';
+import UserComplaintsTab from '../../components/user/UserComplaintsTab';
 
 export default function UserProfileDashboard() {
     // إضافة 'complaints' إلى الخيارات المتاحة
@@ -68,7 +68,7 @@ export default function UserProfileDashboard() {
                     {activeTab === 'orders' && <OrdersTab />}
                     {activeTab === 'wallet' && <WalletTab />}
                     {activeTab === 'storeRequests' && <StoreRequestsTab />}
-                    {activeTab === 'complaints' && <ComplaintsTab />} {/* عرض مكون الشكاوى */}
+                    {activeTab === 'complaints' && <UserComplaintsTab />} {/* عرض مكون الشكاوى */}
                 </div>
             </div>
         </div>

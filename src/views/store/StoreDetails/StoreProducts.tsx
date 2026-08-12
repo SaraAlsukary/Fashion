@@ -9,10 +9,22 @@ export default function StoreProducts({ storeId }: Props) {
     const navigate = useNavigate();
     const { data: productsData, isLoading } = useGetAllProductsByStore(storeId);
     
-    // استخراج المصفوفة بناءً على شكل الاستجابة
     const products = productsData?.data || (Array.isArray(productsData) ? productsData : []);
 
-    // حالة التحميل (Skeleton Loader) متوافقة مع تصميمك الجديد
+    // دالة تحويل رابط الصورة إلى HTTPS عبر Proxy
+    const getSecureImageUrl = (imagePath: string | null) => {
+        if (!imagePath) return '/placeholder-product.png';
+        if (imagePath.startsWith('https://')) return imagePath;
+
+        // بناء الرابط الكامل إن لم يكن مكتملاً
+        const rawUrl = imagePath.startsWith('http://')
+            ? imagePath
+            : `http://www.marketexpress.somee.com/${imagePath.replace(/^\//, '')}`;
+
+        // تحويل الرابط ليمر عبر wsrv.nl بالـ HTTPS
+        return `https://wsrv.nl/?url=${encodeURIComponent(rawUrl)}`;
+    };
+
     if (isLoading) {
         return (
             <div className="space-y-6">
@@ -26,7 +38,6 @@ export default function StoreProducts({ storeId }: Props) {
         );
     }
 
-    // حالة عدم وجود منتجات
     if (!products || products.length === 0) {
         return (
             <div className="text-center py-16 bg-gray-50 rounded-3xl border border-dashed border-gray-200 text-gray-500">
@@ -41,23 +52,25 @@ export default function StoreProducts({ storeId }: Props) {
         <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900 border-b pb-3">المنتجات ({products.length})</h2>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {products.map((product: any) => {
                     const hasDiscount = product.discountPercentage !== null && product.discountPercentage > 0;
 
                     return (
                         <div
                             key={product.id}
-                            // استخدمنا /products/ للتوجيه الصحيح للصفحة من الجذر
-                            onClick={() => navigate(`products/${product.id}`)} 
+                            onClick={() => navigate(`/products/${product.id}`)} 
                             className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group flex flex-col justify-between cursor-pointer"
                         >
-                            {/* قسم الصورة والشارات */}
                             <div className="h-64 bg-gray-50 relative overflow-hidden">
                                 <img
-                                    src={product.image ? product.image.includes('https://res.cloudinary.com') ? product.image : `http://www.marketexpress.somee.com/${product.image}` : '/placeholder-product.png'}
+                                    src={getSecureImageUrl(product.image)}
                                     alt={product.name}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    onError={(e) => {
+                                        // صورة بديلة في حال فشل التحميل
+                                        (e.target as HTMLImageElement).src = '/placeholder-product.png';
+                                    }}
                                 />
                                 {hasDiscount && (
                                     <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
@@ -66,7 +79,6 @@ export default function StoreProducts({ storeId }: Props) {
                                 )}
                             </div>
 
-                            {/* قسم التفاصيل */}
                             <div className="p-4 flex flex-col flex-grow space-y-3">
                                 <div className="space-y-1">
                                     <div className="flex justify-between items-start gap-2">
@@ -91,11 +103,10 @@ export default function StoreProducts({ storeId }: Props) {
                                         )}
                                     </div>
 
-                                    {/* أزرار التحكم: زر "عرض" وزر السلة */}
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={(e) => {
-                                                e.stopPropagation(); // يمنع تكرار حدث الضغط على البطاقة
+                                                e.stopPropagation();
                                                 navigate(`/products/${product.id}`);
                                             }}
                                             className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium py-2 px-3 rounded-xl transition-all"
