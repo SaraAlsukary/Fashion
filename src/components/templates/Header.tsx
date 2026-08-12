@@ -4,12 +4,13 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useGetCartItems } from '../../hooks/useCart';
 import { useUserProfile } from '../../hooks/useUser';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 const Header = () => {
     const { isAuthenticated, logout } = useContext(AuthContext);
     const { data: cartResponse } = useGetCartItems();
-    const { data: user, isLoading: userLoading } = useUserProfile(); 
-    
+    const { data: user, isLoading: userLoading } = useUserProfile();
+
     const navigate = useNavigate();
 
     const cartItemsCount = isAuthenticated ? (cartResponse?.data?.cartItemDto?.length || 0) : 0;
@@ -35,23 +36,23 @@ const Header = () => {
                     </h1>
                     <nav className="hidden md:flex items-center gap-8 font-medium text-gray-600">
                         {/* 2. استخدام NavLink لتفعيل الروابط */}
-                        <NavLink 
-                            to="/" 
-                            className={({ isActive }) => 
-                                isActive 
-                                ? "text-moda-purple border-b-2 border-moda-purple pb-1" 
-                                : "hover:text-moda-purple hover:-translate-y-1 transition-all duration-300 pb-1"
+                        <NavLink
+                            to="/"
+                            className={({ isActive }) =>
+                                isActive
+                                    ? "text-moda-purple border-b-2 border-moda-purple pb-1"
+                                    : "hover:text-moda-purple hover:-translate-y-1 transition-all duration-300 pb-1"
                             }
                         >
                             الرئيسية
                         </NavLink>
-                        
-                        <NavLink 
-                            to="/stores" 
-                            className={({ isActive }) => 
-                                isActive 
-                                ? "text-moda-purple border-b-2 border-moda-purple pb-1" 
-                                : "hover:text-moda-purple hover:-translate-y-1 transition-all duration-300 pb-1"
+
+                        <NavLink
+                            to="/stores"
+                            className={({ isActive }) =>
+                                isActive
+                                    ? "text-moda-purple border-b-2 border-moda-purple pb-1"
+                                    : "hover:text-moda-purple hover:-translate-y-1 transition-all duration-300 pb-1"
                             }
                         >
                             المتاجر
@@ -106,13 +107,14 @@ const Header = () => {
                                 <span onClick={() => navigate('/my-profile')} className="text-sm font-bold text-gray-700 hidden sm:block truncate max-w-[100px] cursor-pointer hover:text-moda-purple transition-colors">
                                     {user?.firstName || 'مستخدم'}
                                 </span>
-                                
+
                                 {/* عرض صورة المستخدم أو أول حرف من اسمه */}
                                 <div onClick={() => navigate('/my-profile')} className="w-8 h-8 rounded-full flex items-center justify-center font-bold cursor-pointer overflow-hidden border border-moda-purple/30 bg-white">
                                     {user?.profilePhoto || localStorage.getItem('userPhoto') ? (
-                                        <img 
-                                            src={user?.profilePhoto ? `http://www.marketexpress.somee.com/${user?.profilePhoto}` : localStorage.getItem('userPhoto')!} 
-                                            alt={user?.firstName || 'User Profile'} 
+                                        <img
+                                            src={user?.profilePhoto ? getSecureImageUrl(user?.profilePhoto) : localStorage.getItem('userPhoto')!}
+
+                                            alt={user?.firstName || 'User Profile'}
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
@@ -121,7 +123,7 @@ const Header = () => {
                                         </span>
                                     )}
                                 </div>
-                                
+
                                 <div className="h-4 w-[1px] bg-gray-300"></div>
                                 <button
                                     onClick={logout}

@@ -3,6 +3,7 @@ import { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../contexts/AuthContext';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useUserProfile } from '../../hooks/useUser'; // 👈 استيراد الهوك
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 const SuperAdminLayout = () => {
     const location = useLocation();
@@ -51,9 +52,8 @@ const SuperAdminLayout = () => {
 
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 right-0 z-50 w-64 bg-slate-800 text-white flex flex-col h-full transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${
-                    isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-                }`}
+                className={`fixed inset-y-0 right-0 z-50 w-64 bg-slate-800 text-white flex flex-col h-full transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+                    }`}
             >
                 <div className="p-4 flex items-center justify-between border-b border-slate-700 shrink-0">
                     <span className="text-2xl font-bold">لوحة الإدارة</span>
@@ -73,11 +73,10 @@ const SuperAdminLayout = () => {
                         <Link
                             key={link.path}
                             to={link.path}
-                            className={`block px-4 py-2 rounded transition-colors ${
-                                location.pathname === link.path
+                            className={`block px-4 py-2 rounded transition-colors ${location.pathname === link.path
                                     ? 'bg-blue-600'
                                     : 'hover:bg-slate-700'
-                            }`}
+                                }`}
                         >
                             {link.name}
                         </Link>
@@ -109,13 +108,15 @@ const SuperAdminLayout = () => {
                                 <>
                                     {/* الصورة الشخصية أو أول حرف من الاسم */}
                                     {userProfile?.profilePhoto ? (
-                                        <img src={userProfile.profilePhoto} alt="Profile" className="w-10 h-10 rounded-full border border-gray-200 object-cover" />
+                                        <img
+                                            src={getSecureImageUrl(userProfile?.profilePhoto)}
+                                            alt="Profile" className="w-10 h-10 rounded-full border border-gray-200 object-cover" />
                                     ) : (
                                         <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
                                             {userProfile?.firstName?.charAt(0) || 'M'}
                                         </div>
                                     )}
-                                    
+
                                     <div>
                                         <h2 className="text-sm font-semibold text-gray-800">
                                             مرحباً، {userProfile?.firstName} {userProfile?.lastName}
@@ -129,11 +130,10 @@ const SuperAdminLayout = () => {
 
                     <button
                         onClick={handleLogoutClick}
-                        className={`group flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 overflow-hidden text-sm sm:text-base ${
-                            isConfirmingLogout
+                        className={`group flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 overflow-hidden text-sm sm:text-base ${isConfirmingLogout
                                 ? 'bg-red-600 text-white shadow-md ring-2 ring-red-300'
                                 : 'bg-red-50 text-red-600 hover:bg-red-100 hover:shadow'
-                        }`}
+                            }`}
                     >
                         <span className="whitespace-nowrap">
                             {isConfirmingLogout ? 'تأكيد الخروج؟' : 'تسجيل الخروج'}
@@ -141,9 +141,8 @@ const SuperAdminLayout = () => {
 
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className={`w-5 h-5 transition-transform duration-300 ${
-                                isConfirmingLogout ? 'animate-pulse' : 'group-hover:-translate-x-1'
-                            }`}
+                            className={`w-5 h-5 transition-transform duration-300 ${isConfirmingLogout ? 'animate-pulse' : 'group-hover:-translate-x-1'
+                                }`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"

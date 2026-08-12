@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useRequestStores, useApproveRequest, useRejectRequest } from '../../hooks/useSuperAdmin';
 // قم بتعديل مسار الاستيراد بناءً على مكان ملف الهوك الخاص بك
-import { useStore } from '../../hooks/useStore'; 
+import { useStore } from '../../hooks/useStore';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 const StoreRequestsPage = () => {
     const [statusFilter, setStatusFilter] = useState<'Pending' | 'Approved' | 'Rejected'>('Pending');
-    
+
     // حالة للتحكم في النافذة المنبثقة (Modal) والطلب المحدد
     const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
 
@@ -17,12 +18,12 @@ const StoreRequestsPage = () => {
 
     const approveMutation = useApproveRequest();
     const rejectMutation = useRejectRequest();
-    
+
     // 1. استخراج دالة الحذف وحالة التحميل من الهوك الخاص بك
     const { deleteStore, isDeletingStore } = useStore();
 
     const handleApprove = (id: number) => {
-        if(window.confirm('هل أنت متأكد من قبول هذا المتجر؟')) {
+        if (window.confirm('هل أنت متأكد من قبول هذا المتجر؟')) {
             approveMutation.mutate(id);
             if (selectedRequest?.id === id) setSelectedRequest(null);
         }
@@ -30,7 +31,7 @@ const StoreRequestsPage = () => {
 
     const handleReject = (id: number) => {
         const reason = window.prompt('يرجى إدخال سبب الرفض (اختياري):');
-        if(reason !== null) {
+        if (reason !== null) {
             rejectMutation.mutate({ requestId: id, reason });
             if (selectedRequest?.id === id) setSelectedRequest(null);
         }
@@ -38,7 +39,7 @@ const StoreRequestsPage = () => {
 
     // 2. دالة التعامل مع الحذف
     const handleDelete = (storeId: number) => {
-        if(window.confirm('هل أنت متأكد من حذف هذا المتجر نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        if (window.confirm('هل أنت متأكد من حذف هذا المتجر نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')) {
             // ملاحظة: تأكد مما إذا كانت الـ API تحتاج إلى req.id أم req.storeId
             deleteStore(storeId);
             if (selectedRequest?.id === storeId) setSelectedRequest(null);
@@ -49,8 +50,8 @@ const StoreRequestsPage = () => {
         <div className="bg-white p-6 rounded-lg shadow space-y-6 relative">
             <div className="flex justify-between items-center border-b pb-4">
                 <h1 className="text-2xl font-bold text-gray-800">إدارة طلبات المتاجر</h1>
-                <select 
-                    value={statusFilter} 
+                <select
+                    value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as any)}
                     className="border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
@@ -89,23 +90,22 @@ const StoreRequestsPage = () => {
                                     <td className="p-4 border-b font-medium text-gray-800">{req.address || 'لا يوجد عنوان'}</td>
                                     <td className="p-4 border-b font-medium text-gray-800">{req.email || 'لا يوجد بريد'}</td>
                                     <td className="p-4 border-b">
-                                        <img src={req.logo ? `http://www.marketexpress.somee.com/${req.logo}` : '/default-store-logo.png'} alt="Logo" className="w-16 h-16 object-cover rounded-md" />
+                                        <img src={getSecureImageUrl(req.logo)} alt="Logo" className="w-16 h-16 object-cover rounded-md" />
                                     </td>
                                     <td className="p-4 border-b">
-                                        <img src={req.featuredImage ? `http://www.marketexpress.somee.com/${req.featuredImage}` : '/default-store-image.png'} alt="Featured" className="w-16 h-16 object-cover rounded-md" />
+                                        <img src={getSecureImageUrl(req.featuredImage)} alt="Featured" className="w-16 h-16 object-cover rounded-md" />
                                     </td>
                                     <td className="p-4 border-b">
-                                        <span className={`px-3 py-1 rounded-full text-sm ${
-                                            statusFilter === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                            statusFilter === 'Approved' ? 'bg-green-100 text-green-800' :
-                                            'bg-red-100 text-red-800'
-                                        }`}>
+                                        <span className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                statusFilter === 'Approved' ? 'bg-green-100 text-green-800' :
+                                                    'bg-red-100 text-red-800'
+                                            }`}>
                                             {statusFilter === 'Pending' ? 'قيد الانتظار' : statusFilter === 'Approved' ? 'مقبول' : 'مرفوض'}
                                         </span>
                                     </td>
                                     <td className="p-4 border-b space-x-2 space-x-reverse min-w-[200px]">
                                         {/* زر العرض */}
-                                        <button 
+                                        <button
                                             onClick={() => setSelectedRequest(req)}
                                             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm transition"
                                         >
@@ -114,14 +114,14 @@ const StoreRequestsPage = () => {
 
                                         {statusFilter === 'Pending' ? (
                                             <>
-                                                <button 
+                                                <button
                                                     onClick={() => handleApprove(req.id)}
                                                     className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm transition disabled:opacity-50"
                                                     disabled={approveMutation.isPending}
                                                 >
                                                     {approveMutation.isPending ? 'جاري القبول...' : 'قبول'}
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={() => handleReject(req.id)}
                                                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm transition disabled:opacity-50"
                                                     disabled={rejectMutation.isPending}
@@ -131,7 +131,7 @@ const StoreRequestsPage = () => {
                                             </>
                                         ) : (
                                             /* 3. زر الحذف (يظهر غالباً للمتاجر المقبولة أو المرفوضة) */
-                                            <button 
+                                            <button
                                                 onClick={() => handleDelete(req.id)} // قد تحتاج لتغييرها لـ req.storeId حسب هيكل البيانات لديك
                                                 className="bg-red-600 mx-3 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm transition disabled:opacity-50"
                                                 disabled={isDeletingStore}
@@ -153,14 +153,14 @@ const StoreRequestsPage = () => {
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center p-6 border-b">
                             <h2 className="text-xl font-bold text-gray-800">تفاصيل طلب المتجر #{selectedRequest.id}</h2>
-                            <button 
+                            <button
                                 onClick={() => setSelectedRequest(null)}
                                 className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
                             >
                                 &times;
                             </button>
                         </div>
-                        
+
                         <div className="p-6 space-y-4 text-right">
                             {/* ... (بقية تفاصيل النافذة المنبثقة كما هي في كودك) ... */}
                             <div className="grid grid-cols-2 gap-4">
@@ -178,11 +178,10 @@ const StoreRequestsPage = () => {
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">حالة الطلب</p>
-                                    <span className={`px-2 py-1 rounded text-xs ${
-                                        statusFilter === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                        statusFilter === 'Approved' ? 'bg-green-100 text-green-800' :
-                                        'bg-red-100 text-red-800'
-                                    }`}>
+                                    <span className={`px-2 py-1 rounded text-xs ${statusFilter === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                            statusFilter === 'Approved' ? 'bg-green-100 text-green-800' :
+                                                'bg-red-100 text-red-800'
+                                        }`}>
                                         {statusFilter}
                                     </span>
                                 </div>
@@ -196,11 +195,11 @@ const StoreRequestsPage = () => {
                             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                                 <div>
                                     <p className="text-sm text-gray-500 mb-2">شعار المتجر</p>
-                                    <img src={selectedRequest.logo ? `http://www.marketexpress.somee.com/${selectedRequest.logo}` : '/default-store-logo.png'} alt="Logo" className="w-full h-32 object-contain bg-gray-50 border rounded-md" />
+                                    <img src={getSecureImageUrl(selectedRequest.logo)} alt="Logo" className="w-full h-32 object-contain bg-gray-50 border rounded-md" />
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500 mb-2">صورة الغلاف</p>
-                                    <img src={selectedRequest.featuredImage ? `http://www.marketexpress.somee.com/${selectedRequest.featuredImage}` : '/default-store-image.png'} alt="Featured" className="w-full h-32 object-cover bg-gray-50 border rounded-md" />
+                                    <img src={getSecureImageUrl(selectedRequest.featuredImage)} alt="Featured" className="w-full h-32 object-cover bg-gray-50 border rounded-md" />
                                 </div>
                             </div>
                         </div>
@@ -208,13 +207,13 @@ const StoreRequestsPage = () => {
                         <div className="p-6 border-t flex justify-end space-x-2 space-x-reverse bg-gray-50">
                             {statusFilter === 'Pending' ? (
                                 <>
-                                    <button 
+                                    <button
                                         onClick={() => handleApprove(selectedRequest.id)}
                                         className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md transition"
                                     >
                                         قبول المتجر
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={() => handleReject(selectedRequest.id)}
                                         className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-md transition"
                                     >
@@ -223,7 +222,7 @@ const StoreRequestsPage = () => {
                                 </>
                             ) : (
                                 /* إضافة زر الحذف أيضاً بداخل النافذة المنبثقة للمتاجر غير المعلقة */
-                                <button 
+                                <button
                                     onClick={() => handleDelete(selectedRequest.id)}
                                     className="bg-red-600 hover:bg-red-700 mx-3 text-white px-6 py-2 rounded-md transition disabled:opacity-50"
                                     disabled={isDeletingStore}
@@ -231,7 +230,7 @@ const StoreRequestsPage = () => {
                                     {isDeletingStore ? 'جاري الحذف...' : 'حذف المتجر'}
                                 </button>
                             )}
-                            <button 
+                            <button
                                 onClick={() => setSelectedRequest(null)}
                                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-md transition"
                             >

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useGetProducts, useDeleteProduct } from '../../hooks/useProduct';
 import { useGetStoresByAdmin } from '../../hooks/useStore';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 const ProductsPage = () => {
     // حالة للتحكم في نافذة العرض
@@ -94,7 +95,7 @@ const ProductsPage = () => {
                         {products?.data?.map((product: any) => (
                             <tr key={product.id} className="hover:bg-gray-50">
                                 <td className="p-4 border-b">
-                                    <img src={`http://www.marketexpress.somee.com/${product.image}`} alt={product.name} className="w-12 h-12 object-cover rounded" />
+                                    <img src={getSecureImageUrl(product.image)} alt={product.name} className="w-12 h-12 object-cover rounded" />
                                 </td>
                                 <td className="p-4 border-b font-medium">{product.name}</td>
                                 <td className="p-4 border-b">{product.price} $</td>

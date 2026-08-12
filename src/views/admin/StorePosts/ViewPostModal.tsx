@@ -1,3 +1,4 @@
+import { getMediaUrl, getSecureImageUrl } from "../../../constant/imageURL";
 import { REACTION_MAP } from "../../store/StoreDetails/StorePosts";
 
 interface Props {
@@ -15,7 +16,7 @@ export default function ViewPostModal({ isOpen, onClose, post }: Props) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 p-4 md:p-10">
             <div className="bg-white rounded-3xl w-full max-w-2xl max-h-full flex flex-col shadow-2xl overflow-hidden relative">
-                
+
                 {/* Header */}
                 <div className="p-4 border-b flex justify-between items-center bg-gray-50">
                     <h3 className="font-bold text-gray-800">تفاصيل المنشور</h3>
@@ -41,9 +42,11 @@ export default function ViewPostModal({ isOpen, onClose, post }: Props) {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {post.postMedias.map((media: any, idx: number) => (
                                 media.mediaType === 'Video' ? (
-                                    <video key={idx} src={`http://www.marketexpress.somee.com/${media.mediaUrl}`} controls className="w-full h-64 object-cover rounded-2xl border bg-black" />
+                                    <video key={idx}src={getMediaUrl(media.mediaUrl)}  controls className="w-full h-64 object-cover rounded-2xl border bg-black" />
                                 ) : (
-                                    <img key={idx} src={`http://www.marketexpress.somee.com/${media.mediaUrl}`} alt="media" className="w-full h-64 object-cover rounded-2xl border" />
+                                                
+                                <img key={idx} src={getSecureImageUrl(media.mediaUrl)} 
+                                        alt="media" className="w-full h-64 object-cover rounded-2xl border" />
                                 )
                             ))}
                         </div>
@@ -52,13 +55,13 @@ export default function ViewPostModal({ isOpen, onClose, post }: Props) {
                     {/* 📊 قسم عرض إحصائيات التفاعلات للأدمن */}
                     <div className="mt-8 pt-4 border-t border-gray-100">
                         <h4 className="text-sm font-bold text-gray-500 mb-3">إحصائيات التفاعل ({totalReactions})</h4>
-                        
+
                         {post.postReactions && post.postReactions.length > 0 ? (
                             <div className="flex flex-wrap gap-3">
                                 {post.postReactions.map((reaction: any) => {
                                     const reactionData = REACTION_MAP[reaction.reactionType];
                                     if (!reactionData) return null;
-                                    
+
                                     return (
                                         <div key={reaction.reactionType} className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-xl">
                                             <span className="text-lg">{reactionData.emoji}</span>

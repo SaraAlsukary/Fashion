@@ -1,8 +1,9 @@
 // components/UserProfile/OrdersTab.tsx
-import  { useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAllOrders, useOrderItems, useCancelOrder } from '../../hooks/useOrder';
 import ConfirmModal from '../templates/ConfirmModal';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 export default function OrdersTab() {
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
@@ -46,7 +47,7 @@ export default function OrdersTab() {
                                     {/* تعديل اسم الحقل إلى createdAt */}
                                     <p className="text-xs text-gray-400 mt-2">📅 {order.createdAt ? new Date(order.createdAt).toLocaleDateString('ar-EG') : 'غير متاح'}</p>
                                     <p className="text-xs text-gray-500 mt-1">📍 العنوان: {order.address}</p>
-                                    <span className="text-xs text-gray-500 mt-1 block">📌 الحالة: <strong className={` ${order.status==='Cancelled'?'text-red-600':order.status==='Processing'?"text-amber-600":'text-green-600'}`}>{order.status == 'Cancelled'?"ملغي":order.status == 'Processing'?"قيد التنفيذ":"مكتمل"}</strong></span>
+                                    <span className="text-xs text-gray-500 mt-1 block">📌 الحالة: <strong className={` ${order.status === 'Cancelled' ? 'text-red-600' : order.status === 'Processing' ? "text-amber-600" : 'text-green-600'}`}>{order.status == 'Cancelled' ? "ملغي" : order.status == 'Processing' ? "قيد التنفيذ" : "مكتمل"}</strong></span>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <span className="font-black text-sm text-gray-900">{order.totalPrice} ل.س</span>
@@ -60,7 +61,7 @@ export default function OrdersTab() {
                                     )}
                                 </div>
                             </div>
-                            
+
                             {/* تفاصيل المنتجات داخل الطلب */}
                             {selectedOrderId === order.id && (
                                 <div className="mt-4 pt-4 border-t border-dashed border-gray-200 bg-gray-50/50 p-3 rounded-xl">
@@ -69,12 +70,12 @@ export default function OrdersTab() {
                                         <div className="space-y-3">
                                             {safeOrderItems.map((item: any, index: number) => (
                                                 <div key={item.id || index} className="flex justify-between items-center text-xs bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-                                                    
+
                                                     {/* بيانات الصورة والمنتج */}
                                                     <div className="flex items-center gap-3">
                                                         {item.image && (
                                                             <div className="w-12 h-12 rounded-lg border border-gray-100 overflow-hidden bg-gray-50 flex-shrink-0">
-                                                                <img src={item.image} alt="Product" className="w-full h-full object-cover" />
+                                                                <img src={getSecureImageUrl(item?.image)} alt="Product" className="w-full h-full object-cover" />
                                                             </div>
                                                         )}
                                                         <div>
@@ -93,7 +94,7 @@ export default function OrdersTab() {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    
+
                                                     {/* السعر */}
                                                     <span className="font-black text-gray-700 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                                                         {item.price} ل.س

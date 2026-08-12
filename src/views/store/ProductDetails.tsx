@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 // استيراد المكونات الفرعية الجديدة 🚀
 import ProductRatingSection from '../../components/product/ProductRatingSection';
 import CommentsSection from '../../components/product/CommentsSection';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 export default function ProductDetails() {
     const { productId, storeId } = useParams<{ productId: string; storeId: string }>();
@@ -46,9 +47,9 @@ export default function ProductDetails() {
 
     const selectedVariant = colorVariants.find((v: any) => v.id === selectedVariantId) || colorVariants[0];
     const currentImage = selectedVariant?.image
-        ? (selectedVariant.image.includes('https://res.cloudinary.com') ? selectedVariant.image : `http://www.marketexpress.somee.com/${selectedVariant.image}`)
+        ? (selectedVariant.image.includes('https://res.cloudinary.com') ? selectedVariant.image : getSecureImageUrl(selectedVariant.image))
         : product?.image
-            ? (product.image.includes('https://res.cloudinary.com') ? product.image : `http://www.marketexpress.somee.com/${product.image}`)
+            ? (product.image.includes('https://res.cloudinary.com') ? product.image : getSecureImageUrl(product.image))
             : '/placeholder-product.png';
     const { data: sizesResponse, isLoading: isLoadingSizes } = useGetSizesByProductColor(pId, selectedVariant?.color || null);
     const { data: suggestionsResponse, isLoading: isLoadingSuggestions } = useGetSuggestProducts(pId);
@@ -102,7 +103,8 @@ export default function ProductDetails() {
                 {/* القسم الأيمن: صورة المنتج */}
                 <div className="space-y-4">
                     <div className="h-[400px] md:h-[550px] w-full bg-gray-50 rounded-2xl overflow-hidden relative border border-gray-100">
-                        <img src={currentImage} alt={product.name} className="w-full h-full object-cover" />
+                        <img src={currentImage}
+                            alt={product.name} className="w-full h-full object-cover" />
                         {hasDiscount && (
                             <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-md">
                                 خصم {product.discountPercentage}%
@@ -150,9 +152,7 @@ export default function ProductDetails() {
                                             className={`w-12 h-12 rounded-xl overflow-hidden transition-all ${selectedVariantId === variant.id ? 'ring-2 ring-offset-2 ring-moda-purple scale-110 shadow-md' : 'opacity-70 border'}`}
                                         >
                                             <img
-                                                src={variant?.image
-                                                    ? (variant.image.includes('https://res.cloudinary.com') ? variant.image : `http://www.marketexpress.somee.com/${variant.image}`)
-                                                    : '/placeholder-product.png'}
+                                                src={getSecureImageUrl(variant.image)}
                                                 alt={variant.color} className="w-full h-full object-cover" />
                                         </button>
                                     ))}
@@ -224,7 +224,8 @@ export default function ProductDetails() {
                         {suggestedProducts.map((suggested: any) => (
                             <div key={suggested.productId} onClick={() => navigate(`/stores/${storeId}/products/${suggested.productId}/`)} className="group cursor-pointer bg-white border rounded-2xl p-3 hover:shadow-lg transition-all">
                                 <div className="h-48 w-full bg-gray-50 rounded-xl overflow-hidden mb-3">
-                                    <img src={suggested.imageUrl || '/placeholder-product.png'} alt={suggested.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                                    <img src={getSecureImageUrl(suggested.imageUrl)}
+                                        alt={suggested.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
                                 </div>
                                 <h3 className="font-bold text-gray-900 text-sm line-clamp-1">{suggested.name}</h3>
                                 <p className="text-moda-purple font-black mt-1">{suggested.price?.toLocaleString()} ل.س</p>

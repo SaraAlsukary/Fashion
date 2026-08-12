@@ -1,6 +1,6 @@
 import { useGetAllPosts, usePostReaction } from '../../../hooks/usePosts';
 
-// 1️⃣ تعريف خريطة التفاعلات (يمكنك نقلها لملف منفصل لتجنب التكرار)
+// 1️⃣ تعريف خريطة التفاعلات
 export const REACTION_MAP: Record<string, { emoji: string; label: string; color: string }> = {
     Like: { emoji: '👍', label: 'إعجاب', color: 'text-blue-600' },
     Love: { emoji: '❤️', label: 'أحببته', color: 'text-red-600' },
@@ -15,6 +15,27 @@ export default function StorePosts({ storeId }: { storeId: number }) {
     const { mutate: reactToPost } = usePostReaction();
 
     const posts = postsData?.data || (Array.isArray(postsData) ? postsData : []);
+
+    // دالة تحويل رابط الصورة إلى HTTPS آمن عبر wsrv.nl Proxy
+    const getSecureImageUrl = (imagePath: string | null) => {
+        if (!imagePath) return '';
+        if (imagePath.startsWith('https://')) return imagePath;
+
+        const rawUrl = imagePath.startsWith('http://')
+            ? imagePath
+            : `http://www.marketexpress.somee.com/${imagePath.replace(/^\//, '')}`;
+
+        return `https://wsrv.nl/?url=${encodeURIComponent(rawUrl)}`;
+    };
+
+    // دالة تنسيق رابط الوسائط الأخرى (الفيديوهات)
+    const getMediaUrl = (urlPath: string | null) => {
+        if (!urlPath) return '';
+        if (urlPath.startsWith('https://')) return urlPath;
+        return urlPath.startsWith('http://')
+            ? urlPath
+            : `http://www.marketexpress.somee.com/${urlPath.replace(/^\//, '')}`;
+    };
 
     if (isLoading) return <div className="animate-pulse bg-white h-40 rounded-2xl"></div>;
     if (posts.length === 0) return <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-2xl border-dashed border">لا توجد منشورات حالياً.</div>;
@@ -33,14 +54,29 @@ export default function StorePosts({ storeId }: { storeId: number }) {
                         <div key={post.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
                             <p className="text-gray-800 text-sm whitespace-pre-wrap mb-4">{post.content}</p>
                             
-                            {/* صور البوست */}
+                            {/* صور وفيديوهات البوست */}
                             {post.postMedias && post.postMedias.length > 0 && (
                                 <div className="grid grid-cols-2 gap-2 mb-4">
                                     {post.postMedias.map((media: any, idx: number) => (
                                         media.mediaType === 'Video' ? (
-                                            <video key={idx} src={`http://www.marketexpress.somee.com/${media.mediaUrl}`} className="rounded-xl w-full h-48 object-cover border" muted />
+                                            <video 
+                                                key={idx} 
+                                                src={getMediaUrl(media.mediaUrl)} 
+                                                className="rounded-xl w-full h-48 object-cover border" 
+                                                controls
+                                                muted 
+                                            />
                                         ) : (
-                                            <img key={idx} src={`http://www.marketexpress.somee.com/${media.mediaUrl}`} alt="post media" className="rounded-xl w-full h-48 object-cover border" />
+                                            <img 
+                                                key={idx} 
+                                                src={getSecureImageUrl(media.mediaUrl)} 
+                                                alt="post media" 
+                                                className="rounded-xl w-full h-48 object-cover border" 
+                                                onError={(e) => {
+                                                    // إخفاء العنصر في حال فشل تحميل الصورة
+                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                }}
+                                            />
                                         )
                                     ))}
                                 </div>

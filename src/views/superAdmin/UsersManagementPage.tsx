@@ -5,6 +5,7 @@ import {
     useDeleteUser,
     useRevokeToken
 } from '../../hooks/useSuperAdmin'; // 👈 قم بتعديل مسار الاستيراد
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 // دالة بسيطة لتنسيق التاريخ
 const formatDate = (dateString: string) => {
@@ -96,7 +97,7 @@ const UsersManagement = () => {
 
                                             {user.profilePhoto ? (
                                                 <img
-                                                    src={user.profilePhoto.includes('https://res.cloudinary.com') ? user.profilePhoto : `http://www.marketexpress.somee.com/${user.profilePhoto}`}
+                                                    src={getSecureImageUrl(user.profilePhoto)}
                                                     alt={user.firstName}
                                                     className="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0"
                                                 />

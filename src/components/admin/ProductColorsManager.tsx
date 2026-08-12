@@ -5,6 +5,7 @@ import {
     useDeleteProductColor
 } from '../../hooks/useClothingItem';
 import toast from 'react-hot-toast';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 interface ProductColorsManagerProps {
     productId: number;
@@ -94,7 +95,7 @@ const ProductColorsManager = ({
                             }`}
                     >
                         <img
-                            src={item.image ? item.image.includes('https://res.cloudinary.com') ? item.image : `http://www.marketexpress.somee.com/${item.image}` : '/placeholder-product.png'}
+                            src={getSecureImageUrl(item.image)} 
                             alt={item.color}
                             className="w-20 h-20 object-cover mb-2 rounded mx-auto border border-gray-100"
                         />

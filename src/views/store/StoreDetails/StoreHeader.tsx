@@ -9,6 +9,19 @@ interface Props {
 }
 
 export default function StoreHeader({ store, followersCount, isLoadingFollowers, isFollowing, isTogglingFollow, onToggleFollow, onOpenComplaint }: Props) {
+    
+    // دالة تحويل رابط الصورة إلى HTTPS آمن عبر wsrv.nl
+    const getSecureImageUrl = (imagePath: string | null) => {
+        if (!imagePath) return '/placeholder-store.png';
+        if (imagePath.startsWith('https://')) return imagePath;
+
+        const rawUrl = imagePath.startsWith('http://')
+            ? imagePath
+            : `http://www.marketexpress.somee.com/${imagePath.replace(/^\//, '')}`;
+
+        return `https://wsrv.nl/?url=${encodeURIComponent(rawUrl)}`;
+    };
+
     return (
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="h-48 md:h-64 bg-gradient-to-r from-purple-900 via-indigo-800 to-moda-purple relative"></div>
@@ -16,9 +29,14 @@ export default function StoreHeader({ store, followersCount, isLoadingFollowers,
                 <div className="flex flex-col md:flex-row items-center gap-5 -mt-16 z-10 text-center md:text-right">
                     <div className="w-32 h-32 bg-white rounded-2xl p-2 border shadow-md shrink-0">
                         <img
-                            src={store.logo ? `http://www.marketexpress.somee.com/${store.logo}` : '/placeholder-store.png'}
+                            // استخدام الدالة هنا
+                            src={getSecureImageUrl(store.logo)}
                             alt={store.storeName}
                             className="w-full h-full object-cover rounded-xl"
+                            onError={(e) => {
+                                // صورة بديلة في حال فشل التحميل
+                                (e.target as HTMLImageElement).src = '/placeholder-store.png';
+                            }}
                         />
                     </div>
                     <div className="space-y-2">

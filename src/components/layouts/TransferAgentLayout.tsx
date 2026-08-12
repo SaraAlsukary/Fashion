@@ -3,6 +3,7 @@ import { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../contexts/AuthContext';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useUserProfile } from '../../hooks/useUser'; // استيراد الهوك
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 const TransferAgentLayout = () => {
     const location = useLocation();
@@ -87,7 +88,7 @@ const TransferAgentLayout = () => {
                                 <>
                                     {/* صورة المستخدم (إذا كانت null سيعرض أول حرف من اسمه كبديل) */}
                                     {userProfile?.profilePhoto ? (
-                                        <img src={`http://www.marketexpress.somee.com/${userProfile.profilePhoto}`} alt="Profile" className="w-10 h-10 rounded-full border border-gray-200 object-cover" />
+                                        <img src={getSecureImageUrl(userProfile?.profilePhoto)} alt="Profile" className="w-10 h-10 rounded-full border border-gray-200 object-cover" />
                                     ) : (
                                         <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
                                             {userProfile?.firstName?.charAt(0) || 'M'}

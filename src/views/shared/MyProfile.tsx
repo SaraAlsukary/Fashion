@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 // افترض أنك وضعت الهوك في هذا المسار، قم بتعديله إذا كان مختلفاً
 import { useUpdateProfilePhoto, useUserProfile } from '../../hooks/useUser';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 const MyProfile = () => {
     const { data: user, isLoading: isFetchingUser, isError } = useUserProfile();
@@ -62,7 +63,7 @@ const MyProfile = () => {
                         <div className="w-full h-full bg-white rounded-full p-1 shadow-md overflow-hidden relative">
                             {user.profilePhoto ? (
                                 <img
-                                    src={`http://www.marketexpress.somee.com/${user.profilePhoto}`}
+                                    src={getSecureImageUrl(user.profilePhoto)}
                                     alt="Profile"
                                     className="w-full h-full rounded-full object-cover"
                                 />

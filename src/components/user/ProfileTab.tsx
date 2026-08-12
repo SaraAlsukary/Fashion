@@ -2,6 +2,7 @@
 import React from 'react';
 import toast from 'react-hot-toast';
 import { useUserProfile, useUpdateProfilePhoto } from '../../hooks/useUser';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 export default function ProfileTab() {
     const { data: userProfile, isLoading: userLoading } = useUserProfile();
@@ -29,7 +30,7 @@ export default function ProfileTab() {
             <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                 <div className="relative group w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-2 border-amber-400 shadow-inner flex-shrink-0">
                     <img
-                        src={userProfile?.profilePhoto ? `http://www.marketexpress.somee.com/${userProfile.profilePhoto}` : localStorage.getItem('userPhoto') || "https://via.placeholder.com/150"}
+                        src={userProfile?.profilePhoto ? getSecureImageUrl(userProfile?.profilePhoto) : localStorage.getItem('userPhoto')!}
                         alt="Profile"
                         className="w-full h-full object-cover"
                     />

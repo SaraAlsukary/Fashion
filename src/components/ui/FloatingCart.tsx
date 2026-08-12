@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useGetCartItems, useUpdateCartItem, useDeleteCartItem } from '../../hooks/useCart';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 interface FloatingCartProps {
     isOpen: boolean;
@@ -64,9 +65,9 @@ export default function FloatingCart({ isOpen, onClose }: FloatingCartProps) {
                                 // 4️⃣ مفاتيح السيرفر الحقيقية: cartItemId و productImage
                                 <div key={item.cartItemId} className="flex gap-4 bg-gray-50 p-3 rounded-2xl border border-gray-100 relative group">
                                     <div className="w-20 h-24 bg-white rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
-                                        <img       src={item?.productImage
-                                                    ? (item.productImage.includes('https://res.cloudinary.com') ? item.productImage : `http://www.marketexpress.somee.com/${item.productImage}`)
-                                                    : '/placeholder-product.png'} alt={`Product ${item.productId}`} className="w-full h-full object-cover" />
+                                        <img
+                                            src={getSecureImageUrl(item?.productImage)}
+                                            alt={`Product ${item.productId}`} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex flex-col justify-between flex-1">
                                         <div>

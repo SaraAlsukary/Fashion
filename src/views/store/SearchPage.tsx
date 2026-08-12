@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query'; // أو حسب المكتبة التي تستخدميها
 import api from '../../services/api'; // تأكدي من مسار الـ api الخاص بك
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 export default function SearchPage() {
     // 1️⃣ قراءة الكلمة من الرابط (مثلاً: ?q=فستان)
@@ -29,7 +30,7 @@ export default function SearchPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {data.map((product: any) => (
                         <div key={product.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                            <img src={product.image} alt={product.name} className="w-full h-48 object-cover rounded-xl" />
+                            <img src={getSecureImageUrl(product.image)} alt={product.name} className="w-full h-48 object-cover rounded-xl" />
                             <h3 className="font-bold mt-3">{product.name}</h3>
                             <p className="text-moda-purple font-black">{product.price} ل.س</p>
                         </div>

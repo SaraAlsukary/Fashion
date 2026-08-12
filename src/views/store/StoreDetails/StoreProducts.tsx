@@ -59,7 +59,7 @@ export default function StoreProducts({ storeId }: Props) {
                     return (
                         <div
                             key={product.id}
-                            onClick={() => navigate(`/products/${product.id}`)} 
+                            onClick={() => navigate(`products/${product.id}`)} 
                             className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group flex flex-col justify-between cursor-pointer"
                         >
                             <div className="h-64 bg-gray-50 relative overflow-hidden">
@@ -107,7 +107,7 @@ export default function StoreProducts({ storeId }: Props) {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                navigate(`/products/${product.id}`);
+                                                navigate(`products/${product.id}`);
                                             }}
                                             className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium py-2 px-3 rounded-xl transition-all"
                                         >
@@ -116,7 +116,7 @@ export default function StoreProducts({ storeId }: Props) {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                navigate(`/products/${product.id}`);
+                                                navigate(`products/${product.id}`);
                                             }}
                                             className="bg-moda-purple hover:bg-moda-purpleHover text-white text-xs font-medium py-2 px-3 rounded-xl transition-all shadow-sm"
                                         >

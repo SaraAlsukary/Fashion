@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useGetCartItems, useUpdateCartItem, useDeleteCartItem } from '../../hooks/useCart';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 export default function CartPage() {
     const navigate = useNavigate();
@@ -47,11 +48,9 @@ export default function CartPage() {
                         {cartItems.map((item: any) => (
                             <div key={item.cartItemId} className="flex items-center gap-6 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm relative">
                                 <div className="w-24 h-28 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
-                                    <img 
-                                       src={item?.productImage
-                                                    ? (item.productImage.includes('https://res.cloudinary.com') ? item.productImage : `http://www.marketexpress.somee.com/${item.productImage}`)
-                                                    : '/placeholder-product.png'}
-                                    alt={`Product ${item.productId}`} className="w-full h-full object-cover" />
+                                    <img
+                                        src={getSecureImageUrl(item?.productImage)}
+                                        alt={`Product ${item.productId}`} className="w-full h-full object-cover" />
                                 </div>
 
                                 <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">

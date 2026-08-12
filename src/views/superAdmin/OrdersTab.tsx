@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useFilterOrders } from '../../hooks/useSuperAdmin';
 import { useUpdateOrderStatus, useOrderItems } from '../../hooks/useOrder';
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 // كائن لترجمة الحالات من الإنجليزية إلى العربية
 const statusTranslations: Record<string, string> = {
@@ -149,7 +150,7 @@ const OrdersTab = () => {
                                   <div className="flex items-center gap-3">
                                     {(item.image || item.Image) && (
                                       <div className="w-12 h-12 rounded-lg border border-gray-200 overflow-hidden bg-white flex-shrink-0">
-                                        <img src={item.image || item.Image} alt="Product" className="w-full h-full object-cover" />
+                                        <img src={getSecureImageUrl(item.image || item.Image)} alt="Product" className="w-full h-full object-cover" />
                                       </div>
                                     )}
                                     <div>

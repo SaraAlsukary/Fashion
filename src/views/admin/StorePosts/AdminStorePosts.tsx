@@ -6,6 +6,7 @@ import PostFormModal from './PostFormModal';
 import DeletePostModal from './DeletePostModal';
 import ViewPostModal from './ViewPostModal';
 import { useGetStoresByAdmin } from '../../../hooks/useStore';
+import { getSecureImageUrl } from '../../../constant/imageURL';
 
 export default function AdminStorePosts() {
     // جلب الـ ID الخاص بالمتجر من الرابط (أو من الـ Context لو كان محفوظاً هناك)
@@ -61,8 +62,8 @@ export default function AdminStorePosts() {
                                 <div className="h-40 bg-gray-100 relative overflow-hidden group">
                                     {post.postMedias[0].mediaType === 'Video' ? (
                                         <>
-                                            <video src={`http://www.marketexpress.somee.com/${post.postMedias[0].mediaUrl}`}
-                                             className="w-full h-full object-cover" muted playsInline />
+                                            <video src={getSecureImageUrl(post.postMedias[0].mediaUrl)}
+                                                className="w-full h-full object-cover" muted playsInline />
                                             {/* أيقونة تشغيل لتوضيح أنه فيديو */}
                                             <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all">
                                                 <div className="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center pl-1 backdrop-blur-sm shadow-lg">
@@ -71,7 +72,7 @@ export default function AdminStorePosts() {
                                             </div>
                                         </>
                                     ) : (
-                                        <img src={`http://www.marketexpress.somee.com/${post.postMedias[0].mediaUrl}`} alt="Preview" className="w-full h-full object-cover" />
+                                        <img src={getSecureImageUrl(post.postMedias[0].mediaUrl)} alt="Preview" className="w-full h-full object-cover" />
                                     )}
 
                                     {post.postMedias.length > 1 && (
