@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useGetAllStores } from '../../hooks/useStore'; // تأكد من المسار
+import { getSecureImageUrl } from '../../constant/imageURL';
 
 export default function AllStores() {
     const { data: storesData, isLoading, error } = useGetAllStores();
@@ -32,7 +33,7 @@ export default function AllStores() {
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="w-14 h-14 bg-gray-50 rounded-xl border border-gray-100 p-1 shadow-sm overflow-hidden group-hover:scale-110 transition-transform duration-300">
                                         <img
-                                            src={store.logo ? `http://www.marketexpress.somee.com/${store.logo}` : '/placeholder-store.png'}
+                                            src={getSecureImageUrl(store.logo)}
                                             alt={store.storeName}
                                             className="w-full h-full object-cover rounded-lg"
                                         />
