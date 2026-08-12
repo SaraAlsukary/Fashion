@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 // 1. إضافة NavLink هنا
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext';
@@ -15,15 +15,15 @@ const Header = () => {
 
     const cartItemsCount = isAuthenticated ? (cartResponse?.data?.cartItemDto?.length || 0) : 0;
 
-    const [searchQuery, setSearchQuery] = useState('');
+    // const [searchQuery, setSearchQuery] = useState('');
 
-    const handleSearch = (e?: React.KeyboardEvent | React.MouseEvent) => {
-        if (e && 'key' in e && e.key !== 'Enter') return;
+    // const handleSearch = (e?: React.KeyboardEvent | React.MouseEvent) => {
+    //     if (e && 'key' in e && e.key !== 'Enter') return;
 
-        if (searchQuery.trim()) {
-            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-        }
-    };
+    //     if (searchQuery.trim()) {
+    //         navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    //     }
+    // };
 
     return (
         <header className="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100 animate-slide-down">
