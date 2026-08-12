@@ -61,7 +61,7 @@ const Header = () => {
                 </div>
 
                 {/* شريط البحث */}
-                <div className="hidden lg:flex flex-1 max-w-md mx-8 group">
+                {/* <div className="hidden lg:flex flex-1 max-w-md mx-8 group">
                     <div className="relative w-full transition-transform duration-300 group-focus-within:scale-[1.02]">
                         <input
                             type="text"
@@ -79,7 +79,7 @@ const Header = () => {
                             🔍
                         </span>
                     </div>
-                </div>
+                </div> */}
 
                 {/* أزرار التفاعل وحساب المستخدم */}
                 <div className="flex items-center gap-3 sm:gap-5">
