@@ -146,17 +146,57 @@ export default function StoreComplaintsPage() {
 
     // إدارة غرف SignalR (Join / Leave)
     // إدارة أحداث SignalR الاستقبال اللحظي
+    // 1. مراقبة حالة الاتصال بشكل صحيح
     useEffect(() => {
         if (!hubConnection) return;
 
-        // 💡 تم إزالة دالة handleReconnected وكود الانضمام من هنا بالكامل
-        // لأن الانضمام سيتم تلقائياً عبر الـ useEffect الخاص بالغرف بمجرد تغير isConnected إلى true
+        const updateConnectionState = () => {
+            setIsConnected(hubConnection.state === signalR.HubConnectionState.Connected);
+        };
 
-        // 1. استلام رسالة جديدة من السيرفر
+        updateConnectionState();
+
+        // تحديث الحالة عند انقطاع وعودة الاتصال
+        hubConnection.onreconnected(updateConnectionState);
+        hubConnection.onreconnecting(updateConnectionState);
+        hubConnection.onclose(updateConnectionState);
+
+        // ملاحظة: لا حاجة لعمل cleanup هنا لـ onreconnected لأن الـ Context غالباً يدير اتصالاً واحداً
+    }, [hubConnection]);
+
+    // 2. الانضمام إلى الغرفة (Join Group) - السر في حل المشكلة! 🚀
+    // هذا الكود سيعمل فوراً عند اختيار شكوى جديدة أو عند نجاح الاتصال/إعادة الاتصال
+
+    useEffect(() => {
+        if (isConnected && selectedComplaintId && hubConnection) {
+            const joinComplaintRoom = async () => {
+                try {
+                    await hubConnection.invoke("JoinComplaintGroup", Number(selectedComplaintId));
+                    await hubConnection.invoke("MarkMessagesAsRead", { ComplaintId: Number(selectedComplaintId) });
+                } catch (err) {
+                    console.error("خطأ أثناء الانضمام للغرفة:", err);
+                }
+            };
+
+            joinComplaintRoom();
+
+            // Cleanup: الخروج من الغرفة عند تغيير الشكوى أو تدمير المكون
+            return () => {
+                hubConnection.invoke("LeaveComplaintGroup", Number(selectedComplaintId)).catch(err => {
+                    console.error("خطأ أثناء الخروج من الغرفة:", err);
+                });
+            };
+        }
+    }, [isConnected, selectedComplaintId, hubConnection]);
+
+    // 3. الاستماع لأحداث الرسائل (مرة واحدة فقط لتجنب التكرار)
+    useEffect(() => {
+        if (!hubConnection) return;
+
+        // 1. استلام رسالة جديدة
         const handleReceiveMessage = (messageDto: any) => {
             const incomingCompId = messageDto?.complaintId || messageDto?.ComplaintId || selectedComplaintIdRef.current;
             const activeCompId = selectedComplaintIdRef.current;
-
             const msgSenderId = String(messageDto?.senderId || messageDto?.SenderId || messageDto?.userId || '').toLowerCase().trim();
             const msgText = messageDto?.messageText || messageDto?.MessageText || messageDto?.message || messageDto?.text || '';
 
@@ -165,7 +205,7 @@ export default function StoreComplaintsPage() {
                 const exists = currentList.some((m: any) => String(m.id || m.Id) === String(incomingId));
                 if (exists) return currentList;
 
-                // استبدال الرسالة المؤقتة (Optimistic Update)
+                // استبدال الرسالة المؤقتة
                 const tempIndex = currentList.findIndex((m: any) =>
                     m.isTemp &&
                     String(m.senderId || m.SenderId).toLowerCase().trim() === msgSenderId &&
@@ -181,15 +221,17 @@ export default function StoreComplaintsPage() {
                 return [...currentList, messageDto];
             });
 
+            // التمرير للأسفل إذا كانت الرسالة للشكوى المفتوحة حالياً
             if (String(incomingCompId) === String(activeCompId)) {
                 scrollToBottom(true);
+                // إذا لم أكن أنا المرسل، اجعلها مقروءة
                 if (msgSenderId && msgSenderId !== currentUserIdRef.current) {
                     hubConnection.invoke("MarkMessagesAsRead", { ComplaintId: Number(activeCompId) }).catch(() => { });
                 }
             }
         };
 
-        // 2. استلام تعديل على رسالة
+        // 2. استلام تعديل
         const handleMessageEdited = (payload: any, newTextArg?: string) => {
             let messageId = payload?.messageId || payload?.MessageId || payload?.id || payload?.Id || payload;
             let newText = payload?.messageText || payload?.MessageText || payload?.text || payload?.newText || newTextArg;
@@ -204,7 +246,7 @@ export default function StoreComplaintsPage() {
             );
         };
 
-        // 3. استلام حذف رسالة
+        // 3. استلام حذف
         const handleMessageDeleted = (payload: any) => {
             let messageId = payload?.messageId || payload?.MessageId || payload?.id || payload?.Id || payload;
             let compId = payload?.complaintId || payload?.ComplaintId || selectedComplaintIdRef.current;
@@ -224,113 +266,18 @@ export default function StoreComplaintsPage() {
             );
         };
 
+        // تفعيل الاستماع
         hubConnection.on("ReceiveMessage", handleReceiveMessage);
         hubConnection.on("MessageEdited", handleMessageEdited);
         hubConnection.on("MessageDeleted", handleMessageDeleted);
         hubConnection.on("MessagesMarkedAsRead", handleMessagesRead);
 
+        // إزالة الاستماع عند تدمير المكون (Cleanup)
         return () => {
             hubConnection.off("ReceiveMessage", handleReceiveMessage);
             hubConnection.off("MessageEdited", handleMessageEdited);
             hubConnection.off("MessageDeleted", handleMessageDeleted);
             hubConnection.off("MessagesMarkedAsRead", handleMessagesRead);
-        };
-    }, [hubConnection, updateMessagesCache, scrollToBottom]);
-
-    // إدارة أحداث SignalR الاستقبال اللحظي
-    useEffect(() => {
-        if (!hubConnection) return;
-
-        const handleReconnected = async () => {
-            const activeCompId = selectedComplaintIdRef.current;
-            if (activeCompId) {
-                try {
-                    await hubConnection.invoke("JoinComplaintGroup", Number(activeCompId));
-                    await hubConnection.invoke("MarkMessagesAsRead", { ComplaintId: Number(activeCompId) });
-                } catch (err) {
-                    console.error("خطأ إعادة الانضمام:", err);
-                }
-            }
-        };
-
-        hubConnection.onreconnected(handleReconnected);
-
-        const handleReceiveMessage = (messageDto: any) => {
-            const incomingCompId = messageDto?.complaintId || messageDto?.ComplaintId || selectedComplaintIdRef.current;
-            const activeCompId = selectedComplaintIdRef.current;
-            const msgSenderId = String(messageDto?.senderId || messageDto?.SenderId || messageDto?.userId || '').toLowerCase().trim();
-            const msgText = messageDto?.messageText || messageDto?.MessageText || messageDto?.message || messageDto?.text || '';
-
-            updateMessagesCache(incomingCompId, (currentList) => {
-                const incomingId = messageDto?.id || messageDto?.Id;
-                if (currentList.some(m => String(m.id || m.Id) === String(incomingId))) return currentList;
-
-                const tempIndex = currentList.findIndex(m =>
-                    m.isTemp &&
-                    String(m.senderId || m.SenderId).toLowerCase().trim() === msgSenderId &&
-                    (m.messageText === msgText || m.message === msgText)
-                );
-
-                if (tempIndex !== -1) {
-                    const updated = [...currentList];
-                    updated[tempIndex] = { ...messageDto, isTemp: false };
-                    return updated;
-                }
-
-                return [...currentList, messageDto];
-            });
-
-            if (String(incomingCompId) === String(activeCompId)) {
-                scrollToBottom(true);
-                if (msgSenderId && msgSenderId !== currentUserIdRef.current) {
-                    hubConnection.invoke("MarkMessagesAsRead", { ComplaintId: Number(activeCompId) }).catch(() => { });
-                }
-            }
-        };
-
-        const handleMessageEdited = (payload: any, newTextArg?: string) => {
-            let messageId = payload?.messageId || payload?.MessageId || payload?.id || payload?.Id || payload;
-            let newText = payload?.messageText || payload?.MessageText || payload?.text || payload?.newText || newTextArg;
-            let compId = payload?.complaintId || payload?.ComplaintId || selectedComplaintIdRef.current;
-
-            updateMessagesCache(compId, (currentList) =>
-                currentList.map(msg => (String(msg.id || msg.Id) === String(messageId))
-                    ? { ...msg, messageText: newText, message: newText, text: newText, isEdited: true }
-                    : msg
-                )
-            );
-        };
-
-        const handleMessageDeleted = (payload: any) => {
-            let messageId = payload?.messageId || payload?.MessageId || payload?.id || payload?.Id || payload;
-            let compId = payload?.complaintId || payload?.ComplaintId || selectedComplaintIdRef.current;
-
-            updateMessagesCache(compId, (currentList) =>
-                currentList.filter(msg => String(msg.id || msg.Id) !== String(messageId))
-            );
-        };
-
-        const handleMessagesRead = (payload: any) => {
-            let compId = payload?.complaintId || payload?.ComplaintId || payload;
-            const targetId = compId || selectedComplaintIdRef.current;
-
-            updateMessagesCache(targetId, (currentList) =>
-                currentList.map(msg => ({ ...msg, isRead: true, IsRead: true }))
-            );
-        };
-
-        hubConnection.on("ReceiveMessage", handleReceiveMessage);
-        hubConnection.on("MessageEdited", handleMessageEdited);
-        hubConnection.on("MessageDeleted", handleMessageDeleted);
-        hubConnection.on("MessagesMarkedAsRead", handleMessagesRead);
-
-        return () => {
-            hubConnection.off("ReceiveMessage", handleReceiveMessage);
-            hubConnection.off("MessageEdited", handleMessageEdited);
-            hubConnection.off("MessageDeleted", handleMessageDeleted);
-            hubConnection.off("MessagesMarkedAsRead", handleMessagesRead);
-            // إزالة onreconnected المخصصة لعدم تكرار التخزين في الذاكرة
-            hubConnection.off("reconnected", handleReconnected);
         };
     }, [hubConnection, updateMessagesCache, scrollToBottom]);
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext, useRef, useMemo, useCallback } from 'react';
-import { useComplaints } from '../../hooks/useComlaints';
+// 1. التعديل الأول: استيراد الـ Hooks مباشرة بدلاً من استخراجها من Hook آخر
+import {  useComplaints } from '../../hooks/useComlaints';
 import { useQueryClient } from '@tanstack/react-query';
 import * as signalR from '@microsoft/signalr';
 import { AuthContext } from '../../contexts/AuthContext';
@@ -7,8 +8,7 @@ import { SignalRContext } from '../../contexts/SignalRContext';
 
 export default function UserComplaintsTab() {
     const queryClient = useQueryClient();
-    const { useGetAllComplaintsByUser, useGetMessagesByComplaintId } = useComplaints();
-
+    const { useGetAllComplaintsByUser, useGetMessagesByComplaintId} = useComplaints()
     // جلب الشكاوى الخاصة بالزبون
     const { data: complaintsResponse, isLoading, isError } = useGetAllComplaintsByUser();
     const complaints = complaintsResponse?.data || (Array.isArray(complaintsResponse) ? complaintsResponse : []);
@@ -136,7 +136,30 @@ export default function UserComplaintsTab() {
         }
     }, [messagesList?.length, selectedComplaintId, loadingMessages]);
 
-    // تعليم الرسائل كمقروءة تلقائياً عند اختيار الشكوى أو الاتصال
+    // 2. التعديل الثاني: الانضمام والخروج من غرفة الشكوى (Join / Leave)
+    useEffect(() => {
+        if (isConnected && selectedComplaintId && hubConnection) {
+            const joinComplaintRoom = async () => {
+                try {
+                    await hubConnection.invoke("JoinComplaintGroup", Number(selectedComplaintId));
+                    await hubConnection.invoke("MarkMessagesAsRead", { ComplaintId: Number(selectedComplaintId) });
+                } catch (err) {
+                    console.error("خطأ أثناء الانضمام للغرفة:", err);
+                }
+            };
+
+            joinComplaintRoom();
+
+            // Cleanup: الخروج من الغرفة عند تغيير الشكوى أو تدمير المكون لمنع تداخل الرسائل
+            return () => {
+                hubConnection.invoke("LeaveComplaintGroup", Number(selectedComplaintId)).catch(err => {
+                    console.error("خطأ أثناء الخروج من الغرفة:", err);
+                });
+            };
+        }
+    }, [isConnected, selectedComplaintId, hubConnection]);
+
+    // تعليم الرسائل كمقروءة تلقائياً عند الاتصال
     useEffect(() => {
         if (selectedComplaintId && isConnected) {
             markAsRead(selectedComplaintId);
@@ -352,7 +375,8 @@ export default function UserComplaintsTab() {
             });
         } catch (error) {
             console.error("❌ خطأ التعديل:", error);
-            queryClient.invalidateQueries({ queryKey: ['messages'] });
+            // 3. التعديل الثالث: تحديد الشكوى فقط عند إعادة التحميل
+            queryClient.invalidateQueries({ queryKey: ['messages', String(selectedComplaintId)] });
         }
     };
 
@@ -371,7 +395,8 @@ export default function UserComplaintsTab() {
             });
         } catch (error) {
             console.error("❌ خطأ الحذف:", error);
-            queryClient.invalidateQueries({ queryKey: ['messages'] });
+            // تحديد الشكوى فقط عند إعادة التحميل
+            queryClient.invalidateQueries({ queryKey: ['messages', String(selectedComplaintId)] });
         }
     };
 

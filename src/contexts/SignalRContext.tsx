@@ -11,7 +11,7 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
 
         const token = localStorage.getItem('token');
         const newConnection = new signalR.HubConnectionBuilder()
-            .withUrl("http://marketexpress.somee.com/chatHub", {
+            .withUrl("https://marketexpress.somee.com/chatHub", {
                 accessTokenFactory: () => token || ""
             })
             .withAutomaticReconnect()
