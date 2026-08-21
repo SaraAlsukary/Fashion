@@ -1,6 +1,10 @@
 import { useState } from 'react';
-import { useRequestStores, useApproveRequest, useRejectRequest } from '../../hooks/useSuperAdmin';
-// قم بتعديل مسار الاستيراد بناءً على مكان ملف الهوك الخاص بك
+import { 
+    useRequestStores, 
+    useApproveRequest, 
+    useRejectRequest, 
+    useStoreFiles 
+} from '../../hooks/useSuperAdmin'; // أضفنا useStoreFiles
 import { useStore } from '../../hooks/useStore';
 import { getSecureImageUrl } from '../../constant/imageURL';
 
@@ -10,16 +14,18 @@ const StoreRequestsPage = () => {
     // حالة للتحكم في النافذة المنبثقة (Modal) والطلب المحدد
     const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
 
+    // جلب طلبات المتاجر الرئيسية
     const { data: requests, isLoading } = useRequestStores({
         storeStatus: statusFilter,
         pageNumber: 1,
         pageSize: 10
     });
 
+    // جلب ملفات المتجر المحدد منفصلاً باستخدام id الطلب المختار
+    const { data: storeFiles, isLoading: isLoadingFiles } = useStoreFiles(selectedRequest?.id);
+
     const approveMutation = useApproveRequest();
     const rejectMutation = useRejectRequest();
-
-    // 1. استخراج دالة الحذف وحالة التحميل من الهوك الخاص بك
     const { deleteStore, isDeletingStore } = useStore();
 
     const handleApprove = (id: number) => {
@@ -37,10 +43,8 @@ const StoreRequestsPage = () => {
         }
     };
 
-    // 2. دالة التعامل مع الحذف
     const handleDelete = (storeId: number) => {
         if (window.confirm('هل أنت متأكد من حذف هذا المتجر نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')) {
-            // ملاحظة: تأكد مما إذا كانت الـ API تحتاج إلى req.id أم req.storeId
             deleteStore(storeId);
             if (selectedRequest?.id === storeId) setSelectedRequest(null);
         }
@@ -104,7 +108,6 @@ const StoreRequestsPage = () => {
                                         </span>
                                     </td>
                                     <td className="p-4 border-b space-x-2 space-x-reverse min-w-[200px]">
-                                        {/* زر العرض */}
                                         <button
                                             onClick={() => setSelectedRequest(req)}
                                             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm transition"
@@ -130,9 +133,8 @@ const StoreRequestsPage = () => {
                                                 </button>
                                             </>
                                         ) : (
-                                            /* 3. زر الحذف (يظهر غالباً للمتاجر المقبولة أو المرفوضة) */
                                             <button
-                                                onClick={() => handleDelete(req.id)} // قد تحتاج لتغييرها لـ req.storeId حسب هيكل البيانات لديك
+                                                onClick={() => handleDelete(req.id)}
                                                 className="bg-red-600 mx-3 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm transition disabled:opacity-50"
                                                 disabled={isDeletingStore}
                                             >
@@ -147,7 +149,7 @@ const StoreRequestsPage = () => {
                 </div>
             )}
 
-            {/* النافذة المنبثقة (Modal) لعرض التفاصيل */}
+            {/* النافذة المنبثقة (Modal) لعرض التفاصيل والملفات */}
             {selectedRequest && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800/60 p-4">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -162,7 +164,6 @@ const StoreRequestsPage = () => {
                         </div>
 
                         <div className="p-6 space-y-4 text-right">
-                            {/* ... (بقية تفاصيل النافذة المنبثقة كما هي في كودك) ... */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">اسم المتجر</p>
@@ -202,6 +203,59 @@ const StoreRequestsPage = () => {
                                     <img src={getSecureImageUrl(selectedRequest.featuredImage)} alt="Featured" className="w-full h-32 object-cover bg-gray-50 border rounded-md" />
                                 </div>
                             </div>
+
+                            {/* ====== قسم جلب وعرض الملفات والمستندات المرفقة ====== */}
+                            <div className="pt-4 border-t mt-4">
+                                <p className="text-sm text-gray-500 mb-3 font-bold">الملفات والمستندات الرسمية</p>
+                                
+                                {isLoadingFiles ? (
+                                    <div className="text-center py-4 text-gray-500 text-sm">جاري تحميل الملفات...</div>
+                                ) : storeFiles && (storeFiles.nationalIdFrontImage || storeFiles.nationalIdBackImage || storeFiles.storeLicenseImage) ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {storeFiles.nationalIdFrontImage && (
+                                            <div>
+                                                <p className="text-xs text-gray-500 mb-2">الهوية الوطنية (أمامي)</p>
+                                                <a href={getSecureImageUrl(storeFiles.nationalIdFrontImage)} target="_blank" rel="noreferrer">
+                                                    <img src={getSecureImageUrl(storeFiles.nationalIdFrontImage)} alt="National ID Front" className="w-full h-32 object-cover bg-gray-50 border rounded-md hover:opacity-80 transition cursor-pointer" />
+                                                </a>
+                                            </div>
+                                        )}
+                                        {storeFiles.nationalIdBackImage && (
+                                            <div>
+                                                <p className="text-xs text-gray-500 mb-2">الهوية الوطنية (خلفي)</p>
+                                                <a href={getSecureImageUrl(storeFiles.nationalIdBackImage)} target="_blank" rel="noreferrer">
+                                                    <img src={getSecureImageUrl(storeFiles.nationalIdBackImage)} alt="National ID Back" className="w-full h-32 object-cover bg-gray-50 border rounded-md hover:opacity-80 transition cursor-pointer" />
+                                                </a>
+                                            </div>
+                                        )}
+                                        {storeFiles.storeLicenseImage && (
+                                            <div>
+                                                <p className="text-xs text-gray-500 mb-2">رخصة المتجر التجارية</p>
+                                                <a href={getSecureImageUrl(storeFiles.storeLicenseImage)} target="_blank" rel="noreferrer">
+                                                    <img src={getSecureImageUrl(storeFiles.storeLicenseImage)} alt="Store License" className="w-full h-32 object-cover bg-gray-50 border rounded-md hover:opacity-80 transition cursor-pointer" />
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : Array.isArray(storeFiles) && storeFiles.length > 0 ? (
+                                    <div className="flex flex-wrap gap-3">
+                                        {storeFiles.map((file: any, index: number) => (
+                                            <a
+                                                key={file.id || index}
+                                                href={getSecureImageUrl(file.url || file)} 
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-md border border-blue-200 transition text-sm font-medium"
+                                            >
+                                                📎 {file.name || `مستند مرفق ${index + 1}`}
+                                            </a>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-4 text-gray-500 bg-gray-50 rounded-md border text-sm">لا توجد ملفات مرفقة لهذا المتجر.</div>
+                                )}
+                            </div>
+
                         </div>
 
                         <div className="p-6 border-t flex justify-end space-x-2 space-x-reverse bg-gray-50">
@@ -221,7 +275,6 @@ const StoreRequestsPage = () => {
                                     </button>
                                 </>
                             ) : (
-                                /* إضافة زر الحذف أيضاً بداخل النافذة المنبثقة للمتاجر غير المعلقة */
                                 <button
                                     onClick={() => handleDelete(selectedRequest.id)}
                                     className="bg-red-600 hover:bg-red-700 mx-3 text-white px-6 py-2 rounded-md transition disabled:opacity-50"

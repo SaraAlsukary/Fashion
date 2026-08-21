@@ -1,22 +1,27 @@
-// components/UserProfile/StoreRequestsTab.tsx
-import  { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetAllRequestStoreByUser, useStore } from '../../hooks/useStore';
 import ConfirmModal from '../templates/ConfirmModal';
 
-
 export default function StoreRequestsTab() {
     const navigate = useNavigate();
     const { data: storeRequestsRes, isLoading: requestsLoading } = useGetAllRequestStoreByUser();
+    
+    // استدعاء دالة الإلغاء وحالة التحميل من الـ hook
     const { cancelStoreRequest, isCancelingRequest } = useStore();
+    
     const [modalInfo, setModalInfo] = useState<{ isOpen: boolean; requestId: number | null }>({ isOpen: false, requestId: null });
 
     const storeRequests = (storeRequestsRes as any)?.data || [];
 
+    // تنفيذ عملية الإلغاء
     const handleConfirmCancel = () => {
         if (!modalInfo.requestId) return;
-        cancelStoreRequest(modalInfo.requestId);
-        setModalInfo({ isOpen: false, requestId: null });
+        cancelStoreRequest(modalInfo.requestId, {
+            onSuccess: () => {
+                setModalInfo({ isOpen: false, requestId: null });
+            }
+        });
     };
 
     return (
@@ -28,7 +33,9 @@ export default function StoreRequestsTab() {
                 </button>
             </div>
 
-            {requestsLoading ? <p className="text-sm text-gray-500">جاري تحميل الطلبات... ⏳</p> : storeRequests.length > 0 ? (
+            {requestsLoading ? (
+                <p className="text-sm text-gray-500">جاري تحميل الطلبات... ⏳</p>
+            ) : storeRequests.length > 0 ? (
                 <div className="space-y-4">
                     {storeRequests.map((req: any) => (
                         <div key={req.id} className="border border-gray-100 rounded-xl p-4 hover:border-amber-200 transition-colors bg-white">
@@ -41,8 +48,13 @@ export default function StoreRequestsTab() {
                                     <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${req.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' : req.status === 'Approved' ? 'bg-green-50 text-green-600' : req.status === 'Rejected' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
                                         {req.status === 'Pending' ? 'قيد الانتظار' : req.status === 'Approved' ? 'تمت الموافقة ✅' : req.status === 'Rejected' ? 'مرفوض ❌' : req.status === 'Cancelled' ? 'ملغي' : req.status}
                                     </span>
+                                    
+                                    {/* زر الإلغاء يظهر فقط إذا كان الطلب قيد الانتظار */}
                                     {req.status === 'Pending' && (
-                                        <button onClick={() => setModalInfo({ isOpen: true, requestId: req.id })} className="text-xs text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg font-bold">
+                                        <button 
+                                            onClick={() => setModalInfo({ isOpen: true, requestId: req.id })} 
+                                            className="text-xs text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg font-bold transition-colors"
+                                        >
                                             إلغاء الطلب
                                         </button>
                                     )}
@@ -55,8 +67,13 @@ export default function StoreRequestsTab() {
                         </div>
                     ))}
                 </div>
-            ) : <div className="text-center py-10 bg-gray-50 border border-dashed border-gray-200 rounded-2xl"><p className="text-sm text-gray-500">ليس لديك أي طلبات انضمام كتاجر.</p></div>}
+            ) : (
+                <div className="text-center py-10 bg-gray-50 border border-dashed border-gray-200 rounded-2xl">
+                    <p className="text-sm text-gray-500">ليس لديك أي طلبات انضمام كتاجر.</p>
+                </div>
+            )}
 
+            {/* نافذة التأكيد */}
             <ConfirmModal
                 isOpen={modalInfo.isOpen}
                 title="إلغاء طلب فتح المتجر"

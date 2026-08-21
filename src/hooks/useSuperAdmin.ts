@@ -230,6 +230,24 @@ export const useDeleteUser = () => {
         }
     });
 };
+export const fetchStoreFiles = async (storeId: number): Promise<any> => {
+    // الانتباه لمسار الـ API كما ذكرت في الطلب
+    const response = await api.get(`/StoreRequest/GetFilesByStore/${storeId}`);
+    return response.data?.data ?? response.data;
+};
+
+// ==========================================
+// إضافة الـ Hook الخاص بملفات المتجر
+// ==========================================
+
+export const useStoreFiles = (storeId?: number) => {
+    return useQuery({
+        queryKey: ['storeFiles', storeId],
+        queryFn: () => fetchStoreFiles(storeId!),
+        // سيتم تفعيل الطلب فقط إذا كان هناك storeId (عندما يضغط المستخدم على عرض المتجر)
+        enabled: !!storeId, 
+    });
+};
 // --- الطلبيات (جديد) ---
 
 // هوك جلب الطلبيات مع الفلترة
