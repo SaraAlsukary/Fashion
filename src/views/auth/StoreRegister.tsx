@@ -1,28 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../hooks/useStore';
-
-// استيراد مكونات الخريطة
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
-
-// إصلاح مشكلة عدم ظهور أيقونة الدبوس الافتراضية في Leaflet مع React
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-let DefaultIcon = L.icon({
-    iconUrl: markerIcon,
-    shadowUrl: markerShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-L.Marker.prototype.options.icon = DefaultIcon;
 
 interface StoreFormData {
     StoreName: string;
     Description: string;
     Address: string;
-    Latitude: string;
-    Longitude: string;
     WorkingHoursStart: string;
     WorkingHoursEnd: string;
     PhoneNumber: string;
@@ -47,17 +30,10 @@ export default function RegisterStore() {
     const [step, setStep] = useState<number>(1);
     const [errors, setErrors] = useState<FormErrors>({}); // حالة لتخزين الأخطاء
 
-    const defaultCenter: [number, number] = [24.7136, 46.6753];
-    const [mapCenter, setMapCenter] = useState<[number, number]>(defaultCenter);
-    const [searchQuery, setSearchQuery] = useState<string>('');
-    const [isSearching, setIsSearching] = useState<boolean>(false);
-
     const [formData, setFormData] = useState<StoreFormData>({
         StoreName: '',
         Description: '',
         Address: '',
-        Latitude: defaultCenter[0].toString(),
-        Longitude: defaultCenter[1].toString(),
         WorkingHoursStart: '',
         WorkingHoursEnd: '',
         PhoneNumber: '',
@@ -71,61 +47,6 @@ export default function RegisterStore() {
         NationalIdBackImage: null,
         StoreLicense: null
     });
-
-    function ChangeMapContext({ center }: { center: [number, number] }) {
-        const map = useMap();
-        useEffect(() => {
-            map.setView(center, 14);
-        }, [center, map]);
-        return null;
-    }
-
-    function MapEventsHandler() {
-        useMapEvents({
-            click(e) {
-                setFormData(prev => ({
-                    ...prev,
-                    Latitude: e.latlng.lat.toString(),
-                    Longitude: e.latlng.lng.toString()
-                }));
-                setMapCenter([e.latlng.lat, e.latlng.lng]);
-            },
-        });
-        return null;
-    }
-
-    const handleSearchLocation = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!searchQuery.trim()) return;
-
-        setIsSearching(true);
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
-            const data = await response.json();
-
-            if (data && data.length > 0) {
-                const lat = parseFloat(data[0].lat);
-                const lon = parseFloat(data[0].lon);
-                console.log({ lat, lon })
-                setMapCenter([lat, lon]);
-                setFormData(prev => ({
-                    ...prev,
-                    Latitude: lat.toString(),
-                    Longitude: lon.toString(),
-                    Address: data[0].display_name
-                }));
-                // مسح خطأ العنوان إذا تم إيجاده
-                setErrors(prev => ({ ...prev, Address: undefined }));
-            } else {
-                setErrors(prev => ({ ...prev, Address: 'لم يتم العثور على الموقع، حاول كتابة اسم المدينة أو الشارع بشكل أوضح.' }));
-            }
-        } catch (error) {
-            console.error('Error searching location:', error);
-            setErrors(prev => ({ ...prev, Address: 'حدث خطأ أثناء البحث عن الموقع.' }));
-        } finally {
-            setIsSearching(false);
-        }
-    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -192,34 +113,44 @@ export default function RegisterStore() {
         setErrors({});
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setErrors({});
+const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrors({});
 
-        if (!validateCurrentStep()) return;
+    if (!validateCurrentStep()) return;
 
-        const dataToSend = new FormData();
+    const dataToSend = new FormData();
 
-        Object.entries(formData).forEach(([key, value]) => {
+    Object.entries(formData).forEach(([key, value]) => {
+        // إضافة الثواني لحقول الوقت لتتوافق مع TimeSpan في C#
+        if (key === 'WorkingHoursStart' || key === 'WorkingHoursEnd') {
+            dataToSend.append(key, value.length === 5 ? `${value}:00` : value);
+        } else {
             dataToSend.append(key, value);
-        });
+        }
+    });
 
-        Object.entries(files).forEach(([key, file]) => {
-            if (file) {
-                dataToSend.append(key, file);
-            }
-        });
+    Object.entries(files).forEach(([key, file]) => {
+        if (file) {
+            dataToSend.append(key, file);
+        }
+    });
 
-        addStoreRequest(dataToSend, {
-            onSuccess: () => {
-                navigate('/auth/register/success');
-            },
-            onError: (error: any) => {
-                // معالجة الأخطاء القادمة من الـ API
-                setErrors({ SubmitError: error?.message || 'حدث خطأ غير متوقع أثناء إرسال الطلب، يرجى المحاولة لاحقاً.' });
-            }
-        });
-    };
+    addStoreRequest(dataToSend, {
+        onSuccess: () => {
+            navigate('/auth/register/success');
+        },
+        onError: (error: any) => {
+            // استخراج رسالة الخطأ الحقيقية من السيرفر بدلاً من رسالة أكسيوس العامة
+            const serverError = error?.response?.data?.message || error?.response?.data || error?.message;
+            const errorMessage = typeof serverError === 'string' 
+                ? serverError 
+                : 'حدث خطأ غير متوقع أثناء إرسال الطلب، تأكد من صحة البيانات والمرفقات.';
+            
+            setErrors({ SubmitError: errorMessage });
+        }
+    });
+};
 
     return (
         <div className="animate-fade-in-up delay-100 max-w-2xl mx-auto p-4">
@@ -279,40 +210,6 @@ export default function RegisterStore() {
                             <label className="text-sm font-semibold text-gray-700">العنوان بالتفصيل</label>
                             <input type="text" name="Address" value={formData.Address} onChange={handleInputChange} className={`w-full px-4 py-2.5 rounded-xl border ${errors.Address ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-moda-purple focus:ring-moda-purple'} focus:ring-1 outline-none transition-all text-sm bg-gray-50 focus:bg-white`} placeholder="المدينة، اسم الشارع، مبنى رقم..." />
                             {errors.Address && <p className="text-xs text-red-500">{errors.Address}</p>}
-                        </div>
-
-                        <div className="space-y-3">
-                            <label className="text-sm font-semibold text-gray-700 block">حدد موقع المتجر على الخريطة</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="ابحث عن مدينة، حي، أو شارع..."
-                                    className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-moda-purple bg-gray-50"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleSearchLocation}
-                                    disabled={isSearching}
-                                    className="px-4 py-2 rounded-xl bg-moda-purple text-white text-sm font-semibold hover:bg-moda-purpleHover transition-colors disabled:opacity-70"
-                                >
-                                    {isSearching ? 'جاري البحث...' : 'بحث'}
-                                </button>
-                            </div>
-
-                            <div className="w-full h-64 rounded-xl overflow-hidden border border-gray-200 shadow-sm z-0 relative">
-                                <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
-                                    <TileLayer
-                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                    />
-                                    <Marker position={[parseFloat(formData.Latitude), parseFloat(formData.Longitude)]} />
-                                    <MapEventsHandler />
-                                    <ChangeMapContext center={mapCenter} />
-                                </MapContainer>
-                            </div>
-                            <p className="text-xs text-gray-400">نصيحة: يمكنك كتابة اسم المنطقة في خانة البحث أو النقر مباشرة على الخريطة لتعديل الدبوس بدقة.</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

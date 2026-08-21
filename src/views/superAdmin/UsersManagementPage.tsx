@@ -3,8 +3,9 @@ import {
     useActiveUsers,
     useBannedUsers,
     useDeleteUser,
-    useRevokeToken
-} from '../../hooks/useSuperAdmin'; // 👈 قم بتعديل مسار الاستيراد
+    useRevokeToken,
+    useUnbanUser // 👈 1. تم إضافة الاستدعاء هنا
+} from '../../hooks/useSuperAdmin'; 
 import { getSecureImageUrl } from '../../constant/imageURL';
 
 // دالة بسيطة لتنسيق التاريخ
@@ -14,8 +15,6 @@ const formatDate = (dateString: string) => {
     return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-// رابط السيرفر الأساسي للصور (استبدله برابط الباك إند الخاص بك)
-
 const UsersManagement = () => {
     const [activeTab, setActiveTab] = useState<'active' | 'banned'>('active');
 
@@ -24,6 +23,7 @@ const UsersManagement = () => {
 
     const deleteUserMutation = useDeleteUser();
     const revokeTokenMutation = useRevokeToken();
+    const unbanUserMutation = useUnbanUser(); // 👈 2. تهيئة الـ Hook الجديد
 
     const handleDelete = (userId: string) => {
         if (window.confirm('هل أنت متأكد من رغبتك في حذف هذا المستخدم نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')) {
@@ -33,9 +33,15 @@ const UsersManagement = () => {
 
     const handleBan = (userId: string) => {
         if (window.confirm('هل أنت متأكد من رغبتك في حظر هذا المستخدم (سحب صلاحية الدخول)؟')) {
-            revokeTokenMutation.mutate(userId, {
-                onSuccess: () => alert('تم سحب صلاحية المستخدم بنجاح')
-            });
+            revokeTokenMutation.mutate(userId);
+        }
+    };
+
+    // 👈 3. دالة جديدة للتعامل مع إلغاء الحظر
+    const handleUnban = (userId: string) => {
+        if (window.confirm('هل أنت متأكد من رغبتك في إلغاء حظر هذا المستخدم وإعادة صلاحياته؟')) {
+            unbanUserMutation.mutate(userId);
+            // ملاحظة: لم نضف alert هنا لأن الـ Hook الخاص بك يحتوي بالفعل على toast.success
         }
     };
 
@@ -94,14 +100,12 @@ const UsersManagement = () => {
                                     {/* 1. الصورة، الاسم واسم المستخدم */}
                                     <td className="py-4 px-4">
                                         <div className="flex items-center gap-3">
-
                                             {user.profilePhoto ? (
                                                 <img
                                                     src={getSecureImageUrl(user.profilePhoto)}
                                                     alt={user.firstName}
                                                     className="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0"
                                                 />
-
                                             ) : (
                                                 <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold shrink-0">
                                                     {user.firstName.charAt(0).toUpperCase()}
@@ -149,6 +153,8 @@ const UsersManagement = () => {
                                     {/* 5. الإجراءات */}
                                     <td className="py-4 px-4">
                                         <div className="flex items-center justify-center gap-2">
+                                            
+                                            {/* زر الحظر يظهر فقط للمستخدمين النشطين */}
                                             {activeTab === 'active' && (
                                                 <button
                                                     onClick={() => handleBan(user.id)}
@@ -160,6 +166,19 @@ const UsersManagement = () => {
                                                 </button>
                                             )}
 
+                                            {/* 👈 4. زر إلغاء الحظر يظهر فقط للمستخدمين المحظورين */}
+                                            {activeTab === 'banned' && (
+                                                <button
+                                                    onClick={() => handleUnban(user.id)}
+                                                    disabled={unbanUserMutation.isPending}
+                                                    className="px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-md text-xs font-medium transition-colors disabled:opacity-50"
+                                                    title="إلغاء حظر المستخدم"
+                                                >
+                                                    {unbanUserMutation.isPending ? 'جاري...' : 'إلغاء حظر'}
+                                                </button>
+                                            )}
+
+                                            {/* زر الحذف يظهر في كلا التبويبين */}
                                             <button
                                                 onClick={() => handleDelete(user.id)}
                                                 disabled={deleteUserMutation.isPending}

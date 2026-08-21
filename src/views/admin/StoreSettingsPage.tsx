@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGetStoresByAdmin, useStore } from '../../hooks/useStore'; // تأكد من المسار الصحيح للـ hooks
 import { getSecureImageUrl } from '../../constant/imageURL';
+import { useNavigate } from 'react-router-dom';
 
 // ==========================================
 // 1. مكون نافذة الحذف (Delete Modal)
@@ -10,7 +11,7 @@ export const DeleteStoreModal = ({ storeId, storeName, onSuccess }: any) => {
   const [localError, setLocalError] = useState<string | null>(null);
 
   const { deleteStore, isDeletingStore } = useStore();
-
+  const navigate = useNavigate()
   const handleOpen = () => {
     setLocalError(null);
     setIsOpen(true);
@@ -24,10 +25,19 @@ export const DeleteStoreModal = ({ storeId, storeName, onSuccess }: any) => {
 
   const handleConfirmDelete = () => {
     setLocalError(null);
+
     deleteStore(storeId, {
       onSuccess: () => {
+        // 1. إغلاق المودال
         setIsOpen(false);
-        if (onSuccess) onSuccess(storeId);
+
+        // 2. تنفيذ الدالة الممررة من الأب (إن وجدت)
+        if (onSuccess) {
+          onSuccess(storeId);
+        }
+
+        // 3. التوجيه إلى الصفحة الرئيسية
+        navigate("/");
       },
       onError: (err: any) => {
         setLocalError(err?.response?.data?.message || 'فشل في حذف المتجر، يرجى المحاولة لاحقاً');

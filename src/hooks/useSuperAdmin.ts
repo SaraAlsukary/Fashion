@@ -64,7 +64,11 @@ export const revokeToken = async (userId: string): Promise<any> => {
     const response = await api.post(`/SuperAdmin/RevokeToken/${userId}`);
     return response.data;
 };
-
+// --- المستخدمين (جديد) ---
+export const unBanUser = async (userId: string): Promise<any> => {
+    const response = await api.post(`/SuperAdmin/UnbanUser/${userId}`);
+    return response.data;
+};
 export const fetchActiveUsers = async (): Promise<any> => {
     const response = await api.get('/SuperAdmin/ActiveUsers');
     return response.data?.data ?? response.data;
@@ -161,10 +165,30 @@ export const useRevokeToken = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: revokeToken,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['activeUsers'] });
-            queryClient.invalidateQueries({ queryKey: ['bannedUsers'] });
-            toast.success("✅ تم سحب التوكن بنجاح")
+        onSuccess: async () => { // 👈 إضافة async
+            // 👈 استخدام Promise.all و await لانتظار تحميل القوائم الجديدة
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['activeUsers'] }),
+                queryClient.invalidateQueries({ queryKey: ['bannedUsers'] })
+            ]);
+            
+            toast.success("✅ تم سحب التوكن بنجاح");
+        },
+    });
+};
+
+export const useUnbanUser = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: unBanUser,
+        onSuccess: async () => { // 👈 إضافة async
+            // 👈 استخدام Promise.all و await لانتظار تحميل القوائم الجديدة
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['activeUsers'] }),
+                queryClient.invalidateQueries({ queryKey: ['bannedUsers'] })
+            ]);
+            
+            toast.success("✅ تم إلغاء حظر المستخدم بنجاح");
         },
     });
 };

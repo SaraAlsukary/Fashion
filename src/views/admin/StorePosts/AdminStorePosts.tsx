@@ -44,7 +44,6 @@ export default function AdminStorePosts() {
                     <span>➕</span> منشور جديد
                 </button>
             </div>
-
             {/* شبكة البوستات */}
             {posts.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">

@@ -157,7 +157,7 @@ export const useStore = () => {
 
     // دالة طلب API لحذف المتجر
     const deleteStoreApi = async (storeId: string | number) => {
-        const { data } = await api.delete(`/Store/Delete/${storeId}`);
+        const { data } = await api.delete(`/Admin/Delete/${storeId}`);
         return data;
     };
 
@@ -200,11 +200,13 @@ export const useStore = () => {
 
     // ---------------- StoreRequest Mutations ----------------
 
-    const addStoreRequestMutation = useMutation<any, AxiosError<ApiErrorResponse>, any>({
+    const addStoreRequestMutation = useMutation<any, AxiosError<any>, any>({
         mutationFn: async (requestData) => {
-            const { data } = await axios.post('http://marketexpress.somee.com/api/StoreRequest/Add', requestData, {
+            // تم تغيير http إلى https لمنع ضياع البيانات أثناء إعادة التوجيه
+            const { data } = await axios.post('https://marketexpress.somee.com/api/StoreRequest/Add', requestData, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    // لا تقم بكتابة Content-Type هنا، دعه فارغاً ليقوم Axios بإنشائه تلقائياً
                 }
             });
             return data;
@@ -214,7 +216,7 @@ export const useStore = () => {
             queryClient.invalidateQueries({ queryKey: ['userStoreRequests'] });
         },
         onError: (err) => {
-            toast.error("حدث خطأ");
+            toast.error("حدث خطأ في الإرسال");
             console.error(err);
         }
     });
