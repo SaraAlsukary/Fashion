@@ -138,7 +138,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 
     addStoreRequest(dataToSend, {
         onSuccess: () => {
-            navigate('/auth/register/success');
+            navigate('/');
         },
         onError: (error: any) => {
             // استخراج رسالة الخطأ الحقيقية من السيرفر بدلاً من رسالة أكسيوس العامة
