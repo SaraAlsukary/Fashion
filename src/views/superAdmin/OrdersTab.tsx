@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useFilterOrders } from '../../hooks/useSuperAdmin';
 import { useUpdateOrderStatus, useOrderItems } from '../../hooks/useOrder';
 import { getSecureImageUrl } from '../../constant/imageURL';
@@ -12,7 +12,7 @@ const statusTranslations: Record<string, string> = {
 
 const OrdersTab = () => {
   // حالة الفلتر الحالي
-  const [selectedFilter, setSelectedFilter] = useState<'Processing' | 'Cancelled' | 'Delivered' | ''>('');
+  const [selectedFilter, setSelectedFilter] = useState<'Processing' | 'Cancelled' | 'Delivered' | ''>('Processing');
   
   // حالة الطلب المحدد لعرض تفاصيله
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
@@ -21,18 +21,31 @@ const OrdersTab = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 10;
 
-  // جلب الطلبات بناءً على الفلتر
-  const { data: orders, isLoading, isError } = useFilterOrders({
-    orderStatus: selectedFilter === '' ? undefined : selectedFilter,
+  // 1️⃣ بناء معاملات الـ API بشكل ديناميكي (إذا كان الكل، نحذف orderStatus تماماً من الطلب)
+  const queryParams: any = {
     pageNumber,
     pageSize
-  });
+  };
+  
+  if (selectedFilter !== '') {
+    queryParams.orderStatus = selectedFilter;
+    // ملاحظة: إذا كان الباك إند يشترط إرسال null بدلاً من حذفه، يمكنك استخدام:
+    // queryParams.orderStatus = selectedFilter === '' ? null : selectedFilter;
+  }
+
+  // جلب الطلبات بناءً على الفلتر
+  const { data: orders, isLoading, isError } = useFilterOrders(queryParams);
 
   // جلب تفاصيل ومنتجات الطلب المحدد
   const { data: orderItems, isLoading: itemsLoading } = useOrderItems(selectedOrderId);
 
   // Hook تحديث الحالة
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateOrderStatus();
+
+  // 2️⃣ استخراج مصفوفة الطلبات بشكل آمن (لمنع الأخطاء إذا اختلفت استجابة الـ API عند طلب "الكل")
+  const safeOrders = Array.isArray(orders) 
+    ? orders 
+    : (orders as any)?.data || (orders as any)?.items || [];
 
   // تجهيز مصفوفة تفاصيل المنتجات بشكل آمن
   const safeOrderItems = Array.isArray(orderItems)
@@ -54,9 +67,11 @@ const OrdersTab = () => {
         <select
           className="border border-gray-300 rounded-md p-2 w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={selectedFilter}
-          onChange={(e) => setSelectedFilter(e.target.value as any)}
+          onChange={(e) => {
+            setSelectedFilter(e.target.value as any);
+            setPageNumber(1); // إعادة الصفحة إلى 1 عند تغيير الفلتر
+          }}
         >
-          <option value="">الكل</option>
           <option value="Processing">{statusTranslations['Processing']}</option>
           <option value="Delivered">{statusTranslations['Delivered']}</option>
           <option value="Cancelled">{statusTranslations['Cancelled']}</option>
@@ -68,7 +83,7 @@ const OrdersTab = () => {
         <div className="text-center py-10 text-gray-500">جاري تحميل الطلبات...</div>
       ) : isError ? (
         <div className="text-center py-10 text-red-500">حدث خطأ أثناء جلب البيانات.</div>
-      ) : orders?.length === 0 ? (
+      ) : safeOrders.length === 0 ? (
         <div className="text-center py-10 text-gray-500">لا توجد طلبات مطابقة للبحث.</div>
       ) : (
         <div className="overflow-x-auto">
@@ -86,9 +101,9 @@ const OrdersTab = () => {
               </tr>
             </thead>
             <tbody>
-              {orders?.map((order: any) => (
-                <>
-                  <tr key={order.id} className="hover:bg-gray-50">
+              {safeOrders.map((order: any) => (
+                <React.Fragment key={order.id}>
+                  <tr className="hover:bg-gray-50">
                     <td className="border border-gray-200 p-3 font-bold">#{order.id}</td>
                     <td className="border border-gray-200 p-3 font-bold">{order.fullName}</td>
                     <td className="border border-gray-200 p-3 font-bold">{order.phoneNumber}</td>
@@ -184,7 +199,7 @@ const OrdersTab = () => {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>
@@ -207,7 +222,7 @@ const OrdersTab = () => {
         
         <button
           onClick={() => setPageNumber((prev) => prev + 1)}
-          disabled={!orders || orders.length < pageSize} 
+          disabled={safeOrders.length < pageSize} 
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           التالي

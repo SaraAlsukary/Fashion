@@ -32,6 +32,7 @@ export const useDeleteProductSize = () => {
         onSuccess: () => {
             // تحديث المقاسات فوراً بعد الحذف
             queryClient.invalidateQueries({ queryKey: ['sizes'] });
+            queryClient.invalidateQueries({ queryKey: ['adminProductDashboard'] });
         },
     });
 };
@@ -50,6 +51,7 @@ export const useDeleteProductColor = () => {
                 queryClient.invalidateQueries({ queryKey: ['clothingItems', variables.productId] });
             } else {
                 queryClient.invalidateQueries({ queryKey: ['clothingItems'] });
+                queryClient.invalidateQueries({ queryKey: ['adminProductDashboard'] });
             }
         },
     });
@@ -98,6 +100,7 @@ export const useAddColorForProduct = () => {
         onSuccess: (_, variables) => {
             // تحديث قائمة الألوان فوراً بعد الإضافة
             queryClient.invalidateQueries({ queryKey: ['clothingItems', variables.productId] });
+            queryClient.invalidateQueries({ queryKey: ['adminProductDashboard'] });
         },
     });
 };
@@ -115,6 +118,7 @@ export const useUpdateColorDetails = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['clothingItems'] });
+            queryClient.invalidateQueries({ queryKey: ['adminProductDashboard'] });
         },
     });
 };
@@ -125,8 +129,8 @@ export const useAddSizesForProduct = () => {
         mutationFn: async ({ productColorId, sizesData }: { productColorId: number, sizesData: any }) => {
             // ✅ الكود الصحيح: إرسال الـ ID كـ Query Parameter
             const { data } = await api.post(
-                `ClothingItem/AddSizesforProduct`, 
-                sizesData, 
+                `ClothingItem/AddSizesforProduct`,
+                sizesData,
                 {
                     params: { productColorId }
                 }
@@ -135,6 +139,7 @@ export const useAddSizesForProduct = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['clothingItems'] });
+            queryClient.invalidateQueries({ queryKey: ['adminProductDashboard'] });
         },
     });
 };
@@ -151,6 +156,8 @@ export const useUpdateSizeForProduct = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sizes'] });
+            queryClient.invalidateQueries({ queryKey: ['adminProductDashboard'] });
         },
     });
 };
+

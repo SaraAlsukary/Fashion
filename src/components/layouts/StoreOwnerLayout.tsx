@@ -13,6 +13,8 @@ const StoreOwnerLayout = () => {
         { name: 'لوحة التحكم', path: '/admin', end: true },
         { name: 'إدارة المنتجات', path: '/admin/products' },
         { name: 'فئات المتجر', path: '/admin/categories' },
+        { name: 'طلبات البيع', path: '/admin/orders' },
+        { name: 'منتجات الحسم', path: '/admin/discount' },
         { name: 'الألوان والمقاسات', path: '/admin/attributes' },
         { name: 'إدارة البوستات', path: '/admin/posts' },
         { name: 'بيانات المتجر', path: '/admin/settings' },

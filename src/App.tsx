@@ -53,7 +53,9 @@ const Dashboard = lazy(() => import('./views/admin/Dashboard'));
 const StoreSettingsPage = lazy(() => import('./views/admin/StoreSettingsPage'));
 const AttributesPage = lazy(() => import('./views/admin/AttributesPage'));
 const CategoriesPage = lazy(() => import('./views/admin/CategoriesPage'));
+const OrderDetailsPage = lazy(() => import('./views/admin/orderDetailsPage'));
 const ProductFormPage = lazy(() => import('./views/admin/ProductFormPage'));
+const DiscountProductsPage = lazy(() => import('./views/admin/DiscountProductsPage'));
 const ProductEditPage = lazy(() => import('./views/admin/ProductEditPage'));
 const ProductsPage = lazy(() => import('./views/admin/ProductsPage'));
 const StoreComplaintsPage = lazy(() => import('./views/admin/StoreComplaintsPage'));
@@ -214,6 +216,9 @@ const router = createBrowserRouter([
       }, {
         path: "posts",
         element: <Suspense fallback={<Loading />}><AdminStorePosts /></Suspense>
+      },{
+        path: "discount",
+        element: <Suspense fallback={<Loading />}><DiscountProductsPage /></Suspense>
       },
       {
         path: "attributes",
@@ -223,7 +228,10 @@ const router = createBrowserRouter([
         path: "categories",
         element: <Suspense fallback={<Loading />}><CategoriesPage /></Suspense>
       },
-
+   {
+        path: "orders",
+        element: <Suspense fallback={<Loading />}><OrderDetailsPage /></Suspense>
+      },
       {
         path: "complaints",
         element: <Suspense fallback={<Loading />}><StoreComplaintsPage /></Suspense>

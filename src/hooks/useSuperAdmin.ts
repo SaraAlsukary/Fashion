@@ -87,7 +87,17 @@ export const deleteUser = async (userId: string): Promise<any> => {
 
 // --- الطلبيات (جديد) ---
 export const fetchFilterOrders = async (params: OrderFilterParams): Promise<any> => {
-    const response = await api.get('/SuperAdmin/GetAllFilterOrders', { params });
+    // 1. نأخذ نسخة من المعاملات لنتمكن من تعديلها
+    const cleanParams: any = { ...params };
+
+    // 2. إذا كانت حالة الطلب فارغة، نحذف المفتاح تماماً من الطلب
+    if (!cleanParams.orderStatus || cleanParams.orderStatus === '') {
+        delete cleanParams.orderStatus;
+    }
+
+    // 3. نرسل المعاملات النظيفة
+    const response = await api.get('/SuperAdmin/GetAllFilterOrders', { params: cleanParams });
+    
     return response.data?.data ?? response.data;
 };
 
